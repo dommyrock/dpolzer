@@ -1,0 +1,49 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import Home from "../components/Home.astro";
+
+const posts = [
+  { id: 1, title: "Building a Neural Network from Scratch", tags: ["Python", "TensorFlow", "AI"] },
+  {
+    id: 2,
+    title: "Optimizing Database Queries for Performance",
+    tags: ["SQL", "PostgreSQL", "Performance"],
+  },
+  {
+    id: 3,
+    title: "Creating a Rust-powered WebAssembly Module",
+    tags: ["Rust", "WebAssembly", "JavaScript"],
+  },
+  {
+    id: 4,
+    title: "Implementing OAuth 2.0 in a React Application",
+    tags: ["React", "OAuth", "Security"],
+  },
+  {
+    id: 5,
+    title: "Developing Microservices with Docker and Kubernetes",
+    tags: ["Docker", "Kubernetes", "Microservices"],
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <!-- <head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1 class="text-3xl font-bold underline">
+				🧑‍🚀 Hello, Astronaut
+			 </h1>
+		</main>
+		<Footer />
+	</body> -->
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <Home />
+</html>

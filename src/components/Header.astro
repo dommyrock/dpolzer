@@ -1,0 +1,31 @@
+---
+import HeaderLink from "./HeaderLink.astro";
+import { LinkedinLogo, GithubLogo, Terminal, XLogo } from "@phosphor-icons/react";
+---
+
+<header
+  class="flex flex-col gap-2 border-b-2 border-slate-500 print:hidden bg-black text-green-500 font-mono"
+>
+  <h2 class="flex w-full justify-center text-xl pt-1">
+    <div class="pr-4">
+      <Terminal size={32} />
+    </div>
+    <HeaderLink href="/">
+      <span class="text-crimson-9">~/</span>dominik.polzer
+    </HeaderLink>
+    <HeaderLink href="/about">
+      <span class="pl-4"> cd ./About </span>
+    </HeaderLink>
+  </h2>
+  <div class="mr-8 mb-4 flex w-full justify-center gap-4">
+    <HeaderLink href="https://github.com/dommyrock" target="_blank">
+      <GithubLogo size={24} />
+    </HeaderLink>
+    <HeaderLink href="linkedin.com/in/dominik-polzer-hi-o/" target="_blank">
+      <LinkedinLogo size={24} />
+    </HeaderLink>
+    <HeaderLink href="https://x.com/dompolzer" target="_blank">
+      <XLogo size={24} />
+    </HeaderLink>
+  </div>
+</header>

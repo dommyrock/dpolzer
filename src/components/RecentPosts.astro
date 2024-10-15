@@ -1,0 +1,69 @@
+---
+const posts = [
+  {
+    id: 1,
+    title: "Building a Neural Network from Scratch",
+    summary:
+      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
+    slug: "neural-network-from-scratch",
+    tags: ["Python", "TensorFlow", "AI"],
+  },
+  {
+    id: 2,
+    title: "Optimizing Database Queries for Performance",
+    summary:
+      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
+    slug: "optimizing-database-queries",
+    tags: ["SQL", "PostgreSQL", "Performance"],
+  },
+  {
+    id: 3,
+    title: "Creating a Rust-powered WebAssembly Module",
+    summary:
+      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
+    slug: "rust-webassembly-module",
+    tags: ["Rust", "WebAssembly", "JavaScript"],
+  },
+  {
+    id: 4,
+    title: "Implementing OAuth 2.0 in a React Application",
+    summary:
+      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
+    slug: "oauth-react-application",
+    tags: ["React", "OAuth", "Security"],
+  },
+  {
+    id: 5,
+    title: "Developing Microservices with Docker and Kubernetes",
+    summary:
+      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
+    slug: "microservices-docker-kubernetes",
+    tags: ["Docker", "Kubernetes", "Microservices"],
+  },
+];
+---
+
+<section>
+  <h2 class="text-3xl font-bold mb-8 border-b border-green-500 pb-2">Recent Posts</h2>
+  <div class="space-y-8">
+    {
+      posts.map((post) => (
+        <div class="border border-green-500 p-6 hover:bg-gray-900 transition-colors duration-300">
+          <h3 class="text-xl font-semibold mb-2">
+            <a href={`/blog/${post.slug}`} class="hover:underline">
+              {post.title}
+            </a>
+          </h3>
+          <p class="text-gray-400 mb-4">{post.summary}</p>
+          <div class="flex flex-wrap gap-2">
+            {post.tags.map((tag) => (
+              <span class="px-2 py-1 bg-green-500 text-black text-xs font-semibold rounded-none">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
