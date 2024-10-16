@@ -1,11 +1,18 @@
 ---
 import FormattedDate from "./FormattedDate.astro";
 
-const { updatedDate } = Astro.props;
-
 const posts = [
+{
+    id: 5,
+    title: "Rust static & dynamic dispatch design patterns",
+    summary:
+      "Exploration and example usage of Rust static & dynamic dispatch design patterns.",
+    slug: "rust-static-dyn-dispatch",
+    tags: ["Docker", "Kubernetes", "Microservices"],
+    date: new Date("2024-10")
+  },
   {
-    id: 1,
+    id: 2,
     title: "Markdown style guide",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
@@ -14,7 +21,7 @@ const posts = [
     date: new Date("2024-05")
   },
   {
-    id: 2,
+    id: 3,
     title: "Optimizing Database Queries for Performance",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
@@ -23,7 +30,7 @@ const posts = [
     date: new Date("2024-04")
   },
   {
-    id: 3,
+    id: 4,
     title: "Creating a Rust-powered WebAssembly Module",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
@@ -32,7 +39,7 @@ const posts = [
     date: new Date("2024-03")
   },
   {
-    id: 4,
+    id: 5,
     title: "Implementing OAuth 2.0 in a React Application",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
@@ -40,15 +47,7 @@ const posts = [
     tags: ["React", "OAuth", "Security"],
     date: new Date("2024-02")
   },
-  {
-    id: 5,
-    title: "Developing Microservices with Docker and Kubernetes",
-    summary:
-      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "using-mdx",
-    tags: ["Docker", "Kubernetes", "Microservices"],
-    date: new Date("2024-01")
-  },
+
 ];
 ---
 
