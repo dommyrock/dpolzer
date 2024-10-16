@@ -1,4 +1,10 @@
-# [Cloudflare pages hosting - Astro docs](https://docs.astro.build/en/guides/deploy/cloudflare/)
+## Build configs
+
+[Github static pages - Astro docs](https://docs.astro.build/en/guides/deploy/github/)
+
+[Cloudflare pages hosting - Astro docs](https://docs.astro.build/en/guides/deploy/cloudflare/)
+[Cloudflare pages build - config](https://developers.cloudflare.com/pages/configuration/build-configuration/)
+[Cloudflare blog - Deploy Astro site ](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/)
 
 ```bash
 npx astro add cloudflare
