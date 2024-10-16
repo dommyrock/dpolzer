@@ -11,6 +11,14 @@ export async function getStaticPaths() {
 }
 type Props = CollectionEntry<'blog'>;
 
+/*Important
+- 	If prerender = 'true' is not added > getStaticPaths() ignored in dynamic page /src/pages/blog/[...slug].astro.
+
+	DOCS: https://docs.astro.build/en/reference/api-reference/#getstaticpaths
+*/
+//Prerender the page as static HTML during the build process
+export const prerender = true;
+
 const post = Astro.props;
 const { Content } = await post.render();
 ---
