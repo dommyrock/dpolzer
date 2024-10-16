@@ -10,15 +10,8 @@ import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://example.com',
-
-  // site: process.env.VERCEL
-  // ? "https://www.maxphillips.dev"
-  // : "http://localhost:3000",
+  site:"https://dpolzer.pages.dev",
   integrations: [mdx(), sitemap(), react(), tailwind()],
-
-  output:"static",
-
   //https://docs.astro.build/en/guides/prefetch/
   prefetch:true,
   output:"server",
