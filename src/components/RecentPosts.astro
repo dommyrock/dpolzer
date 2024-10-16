@@ -1,44 +1,53 @@
 ---
+import FormattedDate from "./FormattedDate.astro";
+
+const { updatedDate } = Astro.props;
+
 const posts = [
   {
     id: 1,
-    title: "Building a Neural Network from Scratch",
+    title: "Markdown style guide",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "neural-network-from-scratch",
+    slug: "markdown-style-guide",
     tags: ["Python", "TensorFlow", "AI"],
+    date: new Date("2024-05")
   },
   {
     id: 2,
     title: "Optimizing Database Queries for Performance",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "optimizing-database-queries",
+    slug: "second-post",
     tags: ["SQL", "PostgreSQL", "Performance"],
+    date: new Date("2024-04")
   },
   {
     id: 3,
     title: "Creating a Rust-powered WebAssembly Module",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "rust-webassembly-module",
+    slug: "third-post",
     tags: ["Rust", "WebAssembly", "JavaScript"],
+    date: new Date("2024-03")
   },
   {
     id: 4,
     title: "Implementing OAuth 2.0 in a React Application",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "oauth-react-application",
+    slug: "using-mdx",
     tags: ["React", "OAuth", "Security"],
+    date: new Date("2024-02")
   },
   {
     id: 5,
     title: "Developing Microservices with Docker and Kubernetes",
     summary:
       "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "microservices-docker-kubernetes",
+    slug: "using-mdx",
     tags: ["Docker", "Kubernetes", "Microservices"],
+    date: new Date("2024-01")
   },
 ];
 ---
@@ -62,6 +71,16 @@ const posts = [
               </span>
             ))}
           </div>
+          <div class="date">
+              <FormattedDate date={post.date} />
+              {/* {
+                updatedDate && (
+                  <div class="last-updated-on">
+                    Last updated on <FormattedDate date={updatedDate} />
+                  </div>
+                )
+              } */}
+            </div>
         </div>
       ))
     }

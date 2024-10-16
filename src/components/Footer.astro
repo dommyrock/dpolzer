@@ -4,12 +4,14 @@ const today = new Date();
 ---
 
 <footer class="border-t border-green-500 mt-16 bg-dommy-black">
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <span class="flex w-full justify-center text-gray-500">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <span class="flex w-full justify-center px-0 text-gray-500">
       {new Date().getFullYear()}
-      <p class="pl-2 pr-2"> DOMINIK POLZER | </p>
-      <Terminal size={32} />
-		<p class="pl-2 text-green-500"> echo rm -rf </p>
-	</span>
+      <p class="my-0 pl-2 pr-2">DOMINIK POLZER |</p>
+      <div class="flex items-center my-2 sm:my-0">
+        <Terminal size={32} />
+        <p class="my-0 pl-2 text-green-500">echo bye!</p>
+      </div>
+    </span>
   </div>
 </footer>
