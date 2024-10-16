@@ -1,3 +1,10 @@
+# [Cloudflare pages hosting - Astro docs](https://docs.astro.build/en/guides/deploy/cloudflare/)
+
+```bash
+npx astro add cloudflare
+```
+
+
 # Astro Starter Kit: Blog
 
 ```sh
