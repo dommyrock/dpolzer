@@ -7,11 +7,17 @@
 ```bash
 npx astro add cloudflare
 ```
-### other docs
+### Other docs
 
-   [Cloudflare pages build - config](https://developers.cloudflare.com/pages/configuration/build-configuration/) <br>
-[Cloudflare blog - Deploy Astro site ](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/)
+- [Cloudflare pages build - config](https://developers.cloudflare.com/pages/configuration/build-configuration/) <br>
+- [Cloudflare blog - Deploy Astro site ](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/)
 
+
+### Configure Custom 'headers' file (to enable font caching)
+- [Astro docs](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)
+- [Cloudflare docs](https://developers.cloudflare.com/pages/configuration/headers/)
+
+---
 
 # Astro Starter Kit: Blog
 
