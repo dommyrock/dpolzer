@@ -1,4 +1,5 @@
 ---
+import HeaderLink from "./HeaderLink.astro";
 import { Terminal } from "@phosphor-icons/react";
 const today = new Date();
 ---
@@ -10,7 +11,9 @@ const today = new Date();
       <p class="my-0 pl-2 pr-2">DOMINIK POLZER |</p>
       <div class="flex items-center my-2 sm:my-0">
         <Terminal size={32} />
-        <p class="my-0 pl-2 text-green-500">echo bye!</p>
+        <HeaderLink href="/blog">
+          <span> ./cd posts</span>
+        </HeaderLink>
       </div>
     </span>
   </div>

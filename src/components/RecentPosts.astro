@@ -2,52 +2,73 @@
 import FormattedDate from "./FormattedDate.astro";
 
 const posts = [
-{
-    id: 5,
+  {
+    id: 8,
+    title: "AI Generating Site UI's",
+    summary: "AI Generating Site UI's",
+    slug: "ai-gen-site-ui",
+    tags: ["JS", "Astro", "Cloudflare", "Tailwind"],
+    date: new Date("2024-10"),
+  },
+  {
+    id: 7,
     title: "Rust static & dynamic dispatch design patterns",
-    summary:
-      "Exploration and example usage of Rust static & dynamic dispatch design patterns.",
+    summary: "Exploration and example usage of Rust static & dynamic dispatch design patterns.",
     slug: "rust-static-dyn-dispatch",
-    tags: ["Docker", "Kubernetes", "Microservices"],
-    date: new Date("2024-10")
+    tags: ["Rust", "System Design"],
+    date: new Date("2024-10"),
   },
   {
-    id: 2,
-    title: "Markdown style guide",
-    summary:
-      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "markdown-style-guide",
-    tags: ["Python", "TensorFlow", "AI"],
-    date: new Date("2024-05")
+    id: 6,
+    title: "RAG pipelines and quantization intro",
+    summary: "Talk I held Live at Endava RAG pipelines and common optimization tehniques.",
+    slug: "rag-conf-talk-endava",
+    tags: ["RAG", "Python", "TensorFlow", "Pytorch"],
+    date: new Date("2024-04"),
   },
   {
-    id: 3,
-    title: "Optimizing Database Queries for Performance",
+    id: 5,
+    title: "Optimizing data heavy GQL search endpoints in Production",
     summary:
-      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "second-post",
-    tags: ["SQL", "PostgreSQL", "Performance"],
-    date: new Date("2024-04")
+      "Talk I held Live at Endava that went over the challenges when developing high traffic GQL Server.",
+    slug: "high-traffic-gql-server-talk-endava",
+    tags: ["GraphQL", "SQL Execution plan", "Expr. Tree", "Performance"],
+    date: new Date("2023-07"),
   },
   {
     id: 4,
-    title: "Creating a Rust-powered WebAssembly Module",
-    summary:
-      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "third-post",
-    tags: ["Rust", "WebAssembly", "JavaScript"],
-    date: new Date("2024-03")
+    title: "Directory relationship GUI project in Rust",
+    summary: "Rust based Directory relationship linker GUI project",
+    slug: "relationship-linker-rust",
+    tags: ["Rust", "Graph", "CLI"],
+    date: new Date("2022-12"),
   },
   {
-    id: 5,
-    title: "Implementing OAuth 2.0 in a React Application",
+    id: 3,
+    title: "Rate limiting API's in the Cloud",
     summary:
-      "A brief excerpt or summary of the blog post goes here, giving readers a taste of what to expect.",
-    slug: "using-mdx",
-    tags: ["React", "OAuth", "Security"],
-    date: new Date("2024-02")
+      "Blog post about Rate limiting API's in the Cloud, setting up paid subscription based routes and caching preflight requests.",
+    slug: "rate-limiting-api-cloud",
+    tags: ["Azure", "Cloud", "Rate-limiting", "Api gateway"],
+    date: new Date("2022-06"),
   },
-
+  {
+    id: 2,
+    title: "Generating static sites from text files - Go Hackathon",
+    summary:
+      "Google Hackathon project that i made and ended up in top 23 contestants among more than 1000 participants.",
+    slug: "go-hackathon-txt-ssr",
+    tags: ["Go", "Hackathon", "Google","SSR"],
+    date: new Date("2022-03"),
+  },
+  {
+    id: 1,
+    title: "Personal project CMS site (google sheets as backend)",
+    summary: "Older personal site that showcased my personal projects",
+    slug: "old-personal-site",
+    tags: ["JS", "React", "vercel"],
+    date: new Date("2021-01"),
+  },
 ];
 ---
 
@@ -71,15 +92,15 @@ const posts = [
             ))}
           </div>
           <div class="date">
-              <FormattedDate date={post.date} />
-              {/* {
+            <FormattedDate date={post.date} />
+            {/* {
                 updatedDate && (
                   <div class="last-updated-on">
                     Last updated on <FormattedDate date={updatedDate} />
                   </div>
                 )
               } */}
-            </div>
+          </div>
         </div>
       ))
     }
