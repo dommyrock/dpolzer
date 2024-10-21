@@ -2,7 +2,7 @@
 const { id } = Astro.props;
 ---
 
-<canvas id={id} class="pb-1 w-full h-24"></canvas>
+<canvas id={id} class="pb-1 w-full h-20"></canvas>
 
 <script define:vars={{ id }}>
   const canvas = document.getElementById(id);
@@ -10,7 +10,7 @@ const { id } = Astro.props;
 
   if (canvas && ctx) {
     canvas.width = canvas.offsetWidth;
-    canvas.height = 100;
+    canvas.height = 90;
 
     const columns = Math.floor(canvas.width / 20) + 1;
     const drops = [];
