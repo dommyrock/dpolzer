@@ -1,5 +1,6 @@
 ---
 import FormattedDate from "./FormattedDate.astro";
+import MatrixEffect from "./matrix-gray.astro";
 
 const posts = [
   {
@@ -58,7 +59,7 @@ const posts = [
     summary:
       "Google Hackathon project that i made and ended up in top 23 contestants among more than 1000 participants.",
     slug: "go-hackathon-txt-ssr",
-    tags: ["Go", "Hackathon", "Google","SSR"],
+    tags: ["Go", "Hackathon", "Google", "SSR"],
     date: new Date("2022-03"),
   },
   {
@@ -74,34 +75,37 @@ const posts = [
 
 <section>
   <h2 class="text-3xl font-bold mb-8 border-b border-green-500 pb-2">Recent Posts</h2>
-  <div class="space-y-8">
+  <div>
     {
-      posts.map((post) => (
-        <div class="border border-green-500 p-6 hover:bg-gray-900 transition-colors duration-300">
-          <h3 class="text-xl font-semibold mb-2">
-            <a href={`/blog/${post.slug}`} class="hover:underline">
-              {post.title}
-            </a>
-          </h3>
-          <p class="text-gray-400 mb-4">{post.summary}</p>
-          <div class="flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <span class="px-2 py-1 bg-green-500 text-black text-xs font-semibold rounded-none">
-                {tag}
-              </span>
-            ))}
-          </div>
-          <div class="date">
-            <FormattedDate date={post.date} />
-            {/* {
+      posts.map((post, index) => (
+        <>
+          <div class="border border-green-500 p-6 hover:bg-gray-900 transition-colors duration-300">
+            <h3 class="text-xl font-semibold mb-2">
+              <a href={`/blog/${post.slug}`} class="hover:underline">
+                {post.title}
+              </a>
+            </h3>
+            <p class="text-gray-400 mb-4">{post.summary}</p>
+            <div class="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <span class="px-2 py-1 bg-green-500 text-black text-xs font-semibold rounded-none">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div class="date">
+              <FormattedDate date={post.date} />
+              {/* {
                 updatedDate && (
                   <div class="last-updated-on">
                     Last updated on <FormattedDate date={updatedDate} />
                   </div>
                 )
               } */}
+            </div>
           </div>
-        </div>
+          {index < posts.length - 1 && <MatrixEffect id={`matrix-${post.id}`} />}
+        </>
       ))
     }
   </div>
