@@ -112,7 +112,8 @@ const posts = [
               } */}
             </div>
           </div>
-          {index < posts.length - 1 && <MatrixEffect id={`matrix-${post.id}`} />}
+          {/* PERF: show Only for first 5 posts */}
+          {index < 5 ? <MatrixEffect id={`matrix-${post.id}`} /> : <div class="pb-2"></div>}
         </>
       ))
     }
