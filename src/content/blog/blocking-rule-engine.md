@@ -21,8 +21,6 @@ We decided to add custom errors to the `Validation Engine` because there are qui
 
 I also included `Tags` in the response payloads, allowing us to get a more granular view of the specific case (combination of rule attributes) that blocked the candidate assignment.
 
-This version improves flow and readability, maintaining the original intent and technical detail.
-
 Example of custom response thrown by the `Blocking Rule Engine`
 
 ```json
@@ -66,7 +64,9 @@ Each rule definition bellow includes a single rule configuration as an example, 
 ```xml
 <Rule ForCandidateStatusIds="7" Minutes="120" Enforce="true"/>
 ```
-Description:
+<br/>
+
+#### Description:
 > As a Candidate assigned with a certain status, when I try to Book or Cancel a Shift in a certain status, once the threshold time limit passes I should be given an error that action I did was not allowed because of the enforced rule.
 
 ### Consecutive Bookings PerXDays Prevention
@@ -76,8 +76,9 @@ Description:
 ```xml
 <Rule ForCandidateStatusId="50" ForShiftStatusId="116" PeriodInDays="7" TimesBookingIsAllowed="5" Enforce="true">
 ```
+<br/>
 
-Description:
+#### Description:
 > As a Candidate assigned with a certain status, when I try to Book a Shift in a certain status, in certain period of days, 1 time over the enforced threshold, I should be given an error that action I did was not allowed because of the enforced rule.
 
 ### ExhaustionPrevention
@@ -88,8 +89,36 @@ Description:
 <Rule ForCandidateStatusId="48" ForShiftStatusId="116" HoursAllowed="12" InLastXHours="24" Enforce="true">
 ```
 
-Description:
+<br/>
+
+#### Description:
 > As a Candidate assigned with a certain status, when I try to Book consecutive Shifts in a certain status that together last X number of hours, in enforced Y period of hours, I should be given an error that action I did was not allowed because of the enforced rule.
+
+#### Code (both backwards and forwards passes in the single query)
+```csharp
+var shiftsInRelevantDateTimeRange = (
+    from shift in ShiftRepo.All
+    join match in Matches.All on shift.MatchId equals match.Id
+    where match.CandidateId == prms.CandidateId
+                //Both before & after WithinXHours ranges combined
+                && shift.StartTime >= DbFunctions.AddHours(newShiftEndDateTime, -shortestWithinXHours)
+                && shift.StartTime <= DbFunctions.AddHours(newShiftStartDateTime, shortestWithinXHours)
+                && shift.StatusID == 1113 //Assigned
+                && shift.CompanyDepartment.CompanyID != assignmentCompanyId
+    select shift).ToList();
+
+var forwardsSum = shiftsInRelevantDateTimeRange.Where(s => s.StartTime >= newShiftStartDateTime
+    && s.StartTime <= DbFunctions.AddHours(newShiftStartDateTime, shortestWithinXHours))
+    .Sum(x => DbFunctions.DiffHours(x.StartTime, x.EndTime) ?? 0);
+
+var backwardsSum = shiftsInRelevantDateTimeRange.Where(s => s.StartTime >= DbFunctions.AddHours(newShiftEndDateTime, -shortestWithinXHours)
+    && s.StartTime <= newShiftEndDateTime)
+    .Sum(x => DbFunctions.DiffHours(x.StartTime, x.EndTime) ?? 0);
+
+if (forwardsSum > shortestHoursAllowed || backwardsSum > shortestHoursAllowed) 
+    ...match & validate rule attributes
+```
+<br/>
 
 ### IndecisivePrevention
 
@@ -97,7 +126,9 @@ Description:
 <Rule ForCandidateStatusId="36" IfShiftEndReasonIds="2" ForTheNextXDays="1" Enforce="True"/>
 ```
 
-Description:
+<br/>
+
+#### Description:
 > As a Candidate assigned with a certain status, when I try to Book a Shift at Facility 2, after the fact I cancelled a shift at Facility 1, if time threshold `ForTheNextXDays` didn’t pass, I should be given an error that action I did was not allowed because of the enforced rule.
 
 ### SideJobPrevention
@@ -106,7 +137,9 @@ Description:
 <Rule ForCandidateStatusId="858" RoleTypeId="3" Enforce="True" />
 ```
 
-Description:
+<br/>
+
+#### Description:
 > As a Candidate with an active Contract Job match to which I am assigned with a certain status, when I attempt to Book a shift prior to the end of that Contract Job, I should be shown an error message that indicates that Booking Shifts while on an Active Contract Job that overlap with the shift start date is not allowed.
 
 #### This was just the front gate into the actual Candidate Assignment ...

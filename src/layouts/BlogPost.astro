@@ -28,10 +28,9 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         box-shadow: var(--box-shadow);
       }
       .prose {
-        width: 720px;
+        width: 1024px;
         max-width: calc(100% - 2em);
         margin: auto;
-        padding: 1em;
         color: rgb(var(--gray-dark));
       }
       .title {
@@ -52,7 +51,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 
   <body class="bg-slate-50">
     <Header />
-      <main class="container min-h-screen mx-auto sm:px-0 lg:px-8 py-12">
+      <main class="container min-h-screen mx-auto lg:px-8 py-12 sm:px-0">
       <article>
         <div class="hero-image">
           {heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
