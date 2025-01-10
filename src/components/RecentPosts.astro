@@ -2,9 +2,17 @@
 import FormattedDate from "./FormattedDate.astro";
 import MatrixEffect from "./matrix.astro";
 
-const posts = [
+let posts = [
   {
-    id: 9,
+    id: 0,
+    title: "Auto image captioning with AI models",
+    summary: "Exploration of AI image captioning workflows and models.",
+    slug: "auto-image-captioning-ai",
+    tags: ["python", "AI", "Image Captioning", "parquet"],
+    date: new Date("2024-11"),
+  },
+  {
+    id: 0,
     title: "AI Generating Site UI's",
     summary: "AI Generating Site UI's",
     slug: "ai-gen-site-ui",
@@ -12,7 +20,7 @@ const posts = [
     date: new Date("2024-10"),
   },
   {
-    id: 8,
+    id: 0,
     title: "Rust static & dynamic dispatch design patterns",
     summary: "Exploration and example usage of Rust static & dynamic dispatch design patterns.",
     slug: "rust-static-dyn-dispatch",
@@ -20,15 +28,16 @@ const posts = [
     date: new Date("2024-10"),
   },
   {
-    id: 7,
+    id: 0,
     title: "250 project Monolith repository build metrics",
-    summary: "Measuring 250 project Monolith repository build metrics and ploting the results with python scripts.",
+    summary:
+      "Measuring 250 project Monolith repository build metrics and ploting the results with python scripts.",
     slug: "py-build-time-analysis",
     tags: ["Python", ".NET", "Build Metrics"],
     date: new Date("2024-05"),
   },
   {
-    id: 6,
+    id: 0,
     title: "RAG pipelines and quantization intro",
     summary: "Talk I held Live at Endava RAG pipelines and common optimization tehniques.",
     slug: "rag-conf-talk-endava",
@@ -36,7 +45,7 @@ const posts = [
     date: new Date("2024-04"),
   },
   {
-    id: 5,
+    id: 0,
     title: "Optimizing data heavy GQL search endpoints in Production",
     summary:
       "Talk I held Live at Endava that went over the challenges when developing high traffic GQL Server.",
@@ -45,7 +54,7 @@ const posts = [
     date: new Date("2023-07"),
   },
   {
-    id: 4,
+    id: 0,
     title: "Directory relationship GUI project in Rust",
     summary: "Rust based Directory relationship linker GUI project",
     slug: "relationship-linker-rust",
@@ -53,7 +62,7 @@ const posts = [
     date: new Date("2022-12"),
   },
   {
-    id: 3,
+    id: 0,
     title: "Rate limiting API's in the Cloud",
     summary:
       "Blog post about Rate limiting API's in the Cloud, setting up paid subscription based routes and caching preflight requests.",
@@ -62,7 +71,7 @@ const posts = [
     date: new Date("2022-06"),
   },
   {
-    id: 2,
+    id: 0,
     title: "Generating static sites from text files - Go Hackathon",
     summary:
       "Google Hackathon project that i made and ended up in top 23 contestants among more than 1000 participants.",
@@ -71,7 +80,7 @@ const posts = [
     date: new Date("2022-03"),
   },
   {
-    id: 1,
+    id: 0,
     title: "Personal project CMS site (google sheets as backend)",
     summary: "Older personal site that showcased my personal projects",
     slug: "old-personal-site",
@@ -79,6 +88,12 @@ const posts = [
     date: new Date("2021-01"),
   },
 ];
+
+// Generate IDs in descending order
+posts = posts.map((post, index, arr) => ({
+  ...post,
+  id: arr.length - index,
+}));
 ---
 
 <section>
@@ -113,7 +128,7 @@ const posts = [
             </div>
           </div>
           {/* PERF: show Only for first 5 posts */}
-          {index < 5 ? <MatrixEffect id={`matrix-${post.id}`} /> : <div class="pb-2"></div>}
+          {index < 5 ? <MatrixEffect id={`matrix-${post.id}`} /> : <div class="pb-2" />}
         </>
       ))
     }
