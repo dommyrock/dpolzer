@@ -4,7 +4,7 @@ import Layout from "../layouts/BlogPost.astro";
 
 <Layout
   title="About Me"
-  description="Lorem ipsum dolor sit amet"
+  description="About Dominik Polzer — 10+ years across distributed systems, Rust, .NET and applied AI, my career timeline, open-source work, and founding Curiosity District."
   pubDate={new Date("October 19 2024")}
   heroImage="/blog-placeholder-2.jpg"
 >
@@ -15,8 +15,8 @@ import Layout from "../layouts/BlogPost.astro";
     and WinForms) as a hobby while studying civil engineering.
     <br />
     By 2017, I had reached my third year in civil engineering, with most of the courses completed. However,
-    I realized that it wasn't something I wanted to pursue full-time. So, I decided to take an Associate's
-    degree course at one of Croatia's top-tier computer science colleges.
+    I realized it wasn't something I wanted to pursue full-time, so I decided to pursue an Associate's
+    degree at one of Croatia's top-tier computer science colleges.
     <br />
     Shortly after completing my courses, I landed my first Full Stack Engineer role at a small startup
     called Dotmetrics.
@@ -26,94 +26,83 @@ import Layout from "../layouts/BlogPost.astro";
     <strong>Professional Experience</strong>
     <br />
     <p class="text-[#22c55e] mb-0">Short version</p>
-    During my 8 years of professional experience, I've worked with various technologies and tools, including
-    C#, Rust, SQL, JavaScript, PowerShell, Bash, Python, Go, and all the major cloud platforms. During
-    those years I gained experience in distributed systems, multithreaded systems, large codebases, data
-    processing, search systems, and high-traffic GraphQL servers.
+    Over roughly 10 years of professional experience, I've worked with a wide range of technologies and tools, including
+    C#, Rust, SQL, JavaScript, PowerShell, Bash, Python, Go, and all the major cloud platforms. Along the
+    way I gained experience in distributed systems, multithreaded systems, large codebases, data processing,
+    search systems, and high-traffic GraphQL servers.
     <br /><br />
 
     <p class="text-[#22c55e] mb-0">Longer version / Career Timeline</p>
     <ul>
       <li>
-        <strong>Dotmetrics:</strong>
-        I started working on .NET-based admin portals and a multithreaded backend aggregation engine
-        that processed website user traffic metrics (from our embedded scripts) for EU & UK sites.
-        <br />
-        It was a great first job where a small team of principal engineers handled close to 1,000 EU
-        sites. I had the opportunity to learn about write-heavy Cassandra clusters, BigQuery, SQL, key
-        web metrics, and efficient web scrapers.
+        <strong>Exein — Software Engineer, Distributed Systems (Apr 2025 – Present):</strong>
+        At <a href="https://www.exein.io/" target="_blank" rel="noopener noreferrer">Exein</a> I'm on the
+        core backend team, scaling the high-availability systems behind continuous firmware vulnerability
+        scanning and analysis.
         <br />
         <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Key learnings</span>
+          <span class="font-medium text-slate-200">Highlights</span>
           <ul>
-            <li class="ml-4">- How to write efficient web scrapers</li>
-            <li class="ml-4">- How to handle large (write heavy) Cassandra clusters</li>
-            <li class="ml-4">- How to process and store large amounts of data</li>
             <li class="ml-4">
-              - How to architect multithreaded backend systems that aggregate large amounts of data
-              using C# constructs like ThreadPool, Concurrent Queue, Dictionary, and other Task
-              Parallel library constructs.
+              - Designed and implemented a vulnerability-tracking microservice for continuous firmware
+              vulnerability scanning, delivering reliable impact notifications to upstream platforms over NATS.
+            </li>
+            <li class="ml-4">
+              - Developed an agentic AI tooling layer with API introspection and runtime code generation
+              to support autonomous CVE analysis.
+            </li>
+            <li class="ml-4">
+              - Stabilized and scaled the core vulnerability-analysis platform — Rust libraries and CVE
+              ingestion pipelines — and migrated the databases to a scalable schema.
+            </li>
+            <li class="ml-4">
+              - Designed and optimized data-ingestion and search services in Rust, improving CVE
+              source-ingestion throughput by 24× using PostgreSQL native batch inserts.
+            </li>
+            <li class="ml-4">
+              - Played a key role on the core backend team, scaling high-availability systems critical to
+              client growth and the company's successful $70M and $100M investment rounds.
             </li>
           </ul>
         </div>
       </li>
       <br />
       <li>
-        <strong>Combis:</strong>
-        After the startup, I transitioned to working on a B2B employee management platform integrated
-        with MS Dynamics 365. My focus was on the backend, particularly the async scheduler, job queuing
-        engine, and invoice generation engine.
-        <br />
-        I also developed early versions of Teams chatbots that allowed executives and project managers
-        to trigger internal workflows through Teams chat controls, as well as the initial version of
-        a distributed Black/White listing service for syncing potential B2B actors across the HT group
-        companies.
-        <br />
-        <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Key learnings</span>
-          <ul>
-            <li class="ml-4">- How to architect FullStack file sharing (GDrive like) systems</li>
-            <li class="ml-4">- How to develop distributed Black/white listing services.</li>
-            <li class="ml-4">
-              - How to automate invoice generation and job scheduling workflows through tools like
-              Hangfire and Azure.
-            </li>
-            <li class="ml-4">- How to develop code execution Teams chatbots.</li>
-          </ul>
-        </div>
-      </li>
-      <br />
-      <li>
-        <strong>Bullhorn:</strong>
-        I then moved on to work on a U.S. healthcare recruitment platform called Bullhorn. The specific
-        product I was hired for had been in production for 20 years and had significant scale, serving
+        <strong>Bullhorn — Software Engineer, Distributed Systems (Aug 2021 – Aug 2025):</strong>
+        Bullhorn is a U.S. healthcare recruitment platform. The specific
+        product I was hired for had been in production for 20 years and ran at significant scale, serving
         large healthcare groups like HealthTrust, Maxim, and Beacon Hill.
         <br />
         I optimized systems for these high-traffic clients and was part of the core team that built and
-        maintained the infrastructure code and GraphQL server that was processing requests from new mobile
-        and portal aps. That server was processing about 100k req/min at peek times and was offloading
-        most async workflows to multiple Hangfire instances. This work frequently required deep dives
-        into EF ORM 'intermediate' code called expression trees and SQL execution schemas.(It was code
-        generated by the .NET LINQ lib that was not always optimized for larger queries so it required
-        writing custom expressions that hooked into ORM code generation of final SQL interpretation).
+        maintained the infrastructure code and the GraphQL server handling requests from the new mobile
+        and portal apps. That server processed about 100k requests/min at peak times and offloaded most
+        async workflows to multiple Hangfire instances. The work frequently required deep dives into the
+        EF ORM's "intermediate" representation — expression trees — and the resulting SQL execution plans.
+        The SQL generated by .NET's LINQ provider wasn't always optimized for larger queries, so I wrote
+        custom expressions that hooked into how the ORM generated its final SQL.
+        <br />
+        On the same platform I also designed and implemented a cross-language (F# → C#) Business Rule
+        engine — a system-abuse-prevention gateway that integrated with our existing GraphQL and REST
+        layers — and optimized data-heavy GraphQL search resolvers down to under 500ms, while querying
+        across millions of records on a 5 TB+ dataset.
         <br />
         <div class="border border-gray-300 p-4 rounded-md">
           <span class="font-medium text-slate-200">Key learnings</span>
           <ul>
-            <li class="ml-4">- Working with 5m+ Lines of code - codebases.</li>
-            <li class="ml-4">- High-traffic GraphQL server library and query developement.</li>
+            <li class="ml-4">- Working with 5M+ lines-of-code codebases.</li>
+            <li class="ml-4">- High-traffic GraphQL server library and query development.</li>
             <li class="ml-4">
-              - How to optimize EF ORM queries by hooing into Expression tree generation.
+              - How to optimize EF ORM queries by hooking into expression-tree generation.
             </li>
             <li class="ml-4">
-              - How to optimize SQL queries, sql execution plans and work with complex sql schema .
+              - How to optimize SQL queries and execution plans, and work with complex SQL schemas.
             </li>
             <li class="ml-4">
-              - Analyze and fix codebase vulnerabilities by writing custom tooling around CVE's.
+              - How to analyze and fix codebase vulnerabilities by writing custom tooling around CVEs.
             </li>
             <li class="ml-4">
-              - How to Architect custom HTTP & GQL middleware that propagates both object oriented
-              Exceptions and Functional Errors correctly.
+              - How to architect custom HTTP & GraphQL middleware that propagates both object-oriented
+              exceptions and functional errors correctly.
             </li>
           </ul>
         </div>
@@ -121,33 +110,93 @@ import Layout from "../layouts/BlogPost.astro";
       <br />
       <li>
         <strong>Rust Experience:</strong>
-        For the majority of previous professional projects we used .NET on the backend, but In 2022,
-        I had my first opportunity to work with Rust in a production environment. I contributed to a
-        Rust-based matching engine that enabled insurance companies to find B2B customers and offer tailored
-        packages. Here, we used technologies such as Actix, SQLx, Grafana, Prometheus, OpenTelemetry,
-        and Postgres. I really enjoyed Rust as a language (coming from previous C# project that had custom
-        Maybe implementation, and a bit of F#)
+        For most of my earlier professional projects we used .NET on the backend, but in 2022 I had my
+        first opportunity to work with Rust in a production environment. I contributed to a Rust-based
+        matching engine that enabled insurance companies to find B2B customers and offer tailored
+        packages. There we used technologies such as Actix, SQLx, Grafana, Prometheus, OpenTelemetry,
+        and Postgres. I really enjoyed Rust as a language, coming from a previous C# project that had a
+        custom Maybe implementation, and a bit of F#.
         <br />
         <div class="border border-gray-300 p-4 rounded-md">
           <span class="font-medium text-slate-200">Key learnings</span>
           <ul>
             <li class="ml-4">
-              - How to work with async runtimes and Frameworks like Tokio, Actix and Axum.
+              - How to work with async runtimes and frameworks like Tokio, Actix and Axum.
             </li>
             <li class="ml-4">
-              - Learned alot about memory ordering and Atomics API in Rust from 'Atomics and locks'.
+              - Learned a lot about memory ordering and the atomics API in Rust from "Rust Atomics and Locks".
             </li>
             <li class="ml-4">
-              - Worked with codegen and Rust build pipeline all the way from AST,HIR.. --> LLVM
+              - Worked with codegen and the Rust build pipeline all the way from AST and HIR through to LLVM.
             </li>
             <li class="ml-4">
-              - How to refactor Rust repositiry deprecated crates and resolve breaking changes.
+              - How to refactor deprecated crates in a Rust repository and resolve breaking changes.
+            </li>
+          </ul>
+        </div>
+      </li>
+      <br />
+      <li>
+        <strong>Combis:</strong>
+        At Combis, I worked on a B2B employee-management platform integrated
+        with MS Dynamics 365. My focus was on the backend, particularly the async scheduler, the job-queuing
+        engine, and the invoice-generation engine.
+        <br />
+        I also developed early versions of Teams chatbots that let executives and project managers
+        trigger internal workflows through Teams chat controls, as well as the initial version of
+        a distributed blacklisting/whitelisting service for syncing potential B2B actors across the HT
+        group companies.
+        <br />
+        <div class="border border-gray-300 p-4 rounded-md">
+          <span class="font-medium text-slate-200">Key learnings</span>
+          <ul>
+            <li class="ml-4">- How to architect full-stack file-sharing (Google Drive–like) systems</li>
+            <li class="ml-4">- How to develop distributed blacklisting/whitelisting services</li>
+            <li class="ml-4">
+              - How to automate invoice generation and job-scheduling workflows through tools like
+              Hangfire and Azure.
+            </li>
+            <li class="ml-4">- How to develop code-execution Teams chatbots.</li>
+          </ul>
+        </div>
+      </li>
+      <br />
+      <li>
+        <strong>Dotmetrics:</strong>
+        I started out working on .NET-based admin portals and a multithreaded backend aggregation engine
+        that processed website user-traffic metrics (from our embedded scripts) for EU & UK sites.
+        <br />
+        It was a great first job, where a small team of principal engineers handled close to 1,000 EU
+        sites. I had the opportunity to learn about write-heavy Cassandra clusters, BigQuery, SQL, key
+        web metrics, and efficient web scrapers.
+        <br />
+        <div class="border border-gray-300 p-4 rounded-md">
+          <span class="font-medium text-slate-200">Key learnings</span>
+          <ul>
+            <li class="ml-4">- How to write efficient web scrapers</li>
+            <li class="ml-4">- How to handle large (write-heavy) Cassandra clusters</li>
+            <li class="ml-4">- How to process and store large amounts of data</li>
+            <li class="ml-4">
+              - How to architect multithreaded backend systems that aggregate large amounts of data
+              using C# constructs like ThreadPool, ConcurrentQueue, ConcurrentDictionary, and other
+              Task Parallel Library (TPL) constructs.
             </li>
           </ul>
         </div>
       </li>
     </ul>
     <br />
+
+    <strong>Curiosity District</strong>
+    <br />
+    Most recently, I founded my own company, <strong>Curiosity District</strong>. It's where I bring
+    together everything from the past decade — distributed systems, Rust and .NET backends, cloud
+    infrastructure, and applied AI / deep learning — to build my own software products and take ideas
+    all the way from prototype to deployment. The name captures the idea: curiosity is what has always
+    driven how I learn and build, and the company is built around exactly that.
+
+    <br /><br />
+
     <strong>Open-Source Projects</strong>
 
     <br />
@@ -170,14 +219,14 @@ import Layout from "../layouts/BlogPost.astro";
 
     <strong>Free Time</strong>
     <br />
-    I enjoy chess puzzles, traveling, swimming, cycling and occasionally participating in hackathons or
-    coding events.
+    In my free time I enjoy hiking, swimming, coding, and chess puzzles.
+
+    <br /><br />
 
     <strong>What's next</strong>
     <p>
-      I hope more exciting challenges in the field of distributed systems, and possibly exploring
-      projects in embedded systems as well, since I've become increasingly interested in those areas
-      recently.
+      I'm looking forward to more exciting challenges in distributed systems, and I'd like to explore
+      embedded systems too, since I've become increasingly interested in that area recently.
     </p>
   </p>
 </Layout>
