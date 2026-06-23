@@ -1,8 +1,20 @@
 ---
 import FormattedDate from "./FormattedDate.astro";
 import MatrixEffect from "./matrix.astro";
+import { Certificate } from "@phosphor-icons/react";
 
 let posts = [
+  {
+    id: 0,
+    title: "MIT Applied AI & Data Science Certificate — Curriculum Completion",
+    summary:
+      "Finished MIT's Applied AI & Data Science program (Aug 2025 – Mar 2026). My deep-learning capstone detects malaria from red blood cell images with a custom CNN at 97% accuracy — built hands-on with Keras, TensorFlow and EDA.",
+    slug: "mit-applied-ai-certificate",
+    tags: ["Deep Learning", "ML", "EDA", "TensorFlow", "Keras", "CNN", "MIT"],
+    date: new Date("2026-03"),
+    certUrl:
+      "https://credentials.professional.mit.edu/02bb6f4e-712f-4c45-b361-6a9e40ce03be#acc.trT3JNAj",
+  },
   {
     id: 0,
     title: "Auto image captioning with AI models",
@@ -112,11 +124,25 @@ posts = posts.map((post, index, arr) => ({
       posts.map((post, index) => (
         <>
           <div class="border border-green-500 p-6 hover:bg-gray-900 transition-colors duration-300">
-            <h3 class="text-xl font-semibold mb-2">
-              <a href={`/blog/${post.slug}`} class="hover:underline">
-                {post.title}
-              </a>
-            </h3>
+            <div class="flex items-start justify-between gap-4 mb-2">
+              <h3 class="text-xl font-semibold">
+                <a href={`/blog/${post.slug}`} class="hover:underline">
+                  {post.title}
+                </a>
+              </h3>
+              {post.certUrl && (
+                <a
+                  href={post.certUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View MIT certificate"
+                  title="View MIT certificate"
+                  class="text-red-400 hover:text-red-300 transition-colors shrink-0"
+                >
+                  <Certificate size={28} />
+                </a>
+              )}
+            </div>
             <p class="text-gray-400 mb-4">{post.summary}</p>
             <div class="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
