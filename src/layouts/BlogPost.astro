@@ -31,7 +31,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         width: 1024px;
         max-width: calc(100% - 2em);
         margin: auto;
-        color: rgb(var(--gray-dark));
+        color: #cbd5e1;
       }
       .title {
         margin-bottom: 1em;
@@ -47,9 +47,29 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         font-style: italic;
       }
     </style>
+    <style is:global>
+      /* Match the dark theme of the main page on blog posts and /about */
+      body {
+        background-image: none !important;
+        color: #cbd5e1;
+      }
+      .prose h1,
+      .prose h2,
+      .prose h3,
+      .prose h4,
+      .prose h5,
+      .prose h6,
+      .title h1 {
+        color: #f1f5f9 !important;
+      }
+      /* keep inline code legible on its light chip */
+      .prose code {
+        color: #1e293b !important;
+      }
+    </style>
   </head>
 
-  <body class="bg-slate-50">
+  <body class="bg-dommy-black">
     <Header />
       <main class="container min-h-screen mx-auto lg:px-8 py-12 sm:px-0">
       <article>
