@@ -1,0 +1,48 @@
+---
+const liveUrl = "https://hike-trip.dominik-polzer.workers.dev/";
+const repoUrl = "https://github.com/dommyrock/hike-trip";
+const description =
+  "A mobile-friendly, installable PWA I built and deployed to make planning and navigating a hiking trip with friends easier. A fast trail finder for two base regions — Ortisei / Val Gardena (Dolomites) and Kranjska Gora (Julian Alps · Triglav National Park) — with trails drawn on an interactive OpenStreetMap, colour-coded by difficulty, plus search, filtering and a card per trail showing distance from your base, peak height, length, ascent and walking time. Installs to your home screen and works offline.";
+const tags = ["Astro", "Leaflet", "Cloudflare Workers", "D1 / SQLite", "PWA", "OpenStreetMap"];
+---
+
+<section class="mb-16">
+  <h2 class="text-3xl font-bold mb-8 border-b border-green-500 pb-2">Latest Project</h2>
+  <div class="bg-gray-900 p-8 rounded-none border border-green-500">
+    <h3 class="text-2xl font-semibold mb-4">
+      <a href={liveUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
+        Alpine Trails — Hiking Trip Planner
+      </a>
+    </h3>
+    <p class="mb-4 text-gray-400">
+      {description}
+    </p>
+    <div class="flex flex-wrap gap-2 mb-6">
+      {
+        tags.map((tag) => (
+          <span class="px-2 py-1 bg-green-500 text-black text-xs font-semibold rounded-none">
+            {tag}
+          </span>
+        ))
+      }
+    </div>
+    <div class="flex flex-wrap gap-6">
+      <a
+        href={liveUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-white font-medium hover:underline"
+      >
+        &gt; Open app
+      </a>
+      <a
+        href={repoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-white font-medium hover:underline"
+      >
+        &gt; Source
+      </a>
+    </div>
+  </div>
+</section>
