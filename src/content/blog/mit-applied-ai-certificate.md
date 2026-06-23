@@ -2,6 +2,7 @@
 title: 'MIT Applied AI & Data Science Certificate — Curriculum Completion'
 description: 'Reflections on finishing the MIT Applied AI & Data Science program (Aug 2025 – Mar 2026), plus my deep-learning capstone — detecting malaria from red blood cell images with a custom CNN at 97% accuracy.'
 pubDate: 'Mar 1 2026'
+heroImage: '/mit-capstone-malaria.jpg'
 ---
 
 From **August 2025 to March 2026** I completed the
