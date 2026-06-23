@@ -3,6 +3,9 @@ dist/
 # generated types
 .astro/
 
+# cloudflare wrangler (build artifacts + local miniflare dev state)
+.wrangler/
+
 .vscode/
 
 # dependencies
