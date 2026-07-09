@@ -37,6 +37,33 @@ html {
 	background-color: #0f0f10;
 }
 
+/* Card with a border-only gradient ring: light grey on the left edge, fading
+   into the site green just past the corner curve; interior stays transparent.
+   Used by the Latest Project and Recent Posts cards on the homepage. */
+.post-card {
+	position: relative;
+	border-radius: 10px;
+}
+.post-card::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	border: 1px solid transparent;
+	background: linear-gradient(
+			90deg,
+			rgba(203, 213, 225, 0.9) 0%,
+			rgba(34, 197, 94, 0.55) 18%,
+			rgba(34, 197, 94, 0.3) 100%
+		)
+		border-box;
+	mask:
+		linear-gradient(#000, #000) padding-box,
+		linear-gradient(#000, #000) border-box;
+	mask-composite: exclude;
+	pointer-events: none;
+}
+
 body {
 	font-family: 'Atkinson', sans-serif;
 	margin: 0;
