@@ -44,8 +44,36 @@ import Layout from "../layouts/BlogPost.astro";
           <span class="font-medium text-slate-200">Highlights</span>
           <ul>
             <li class="ml-4">
-              - Designed and implemented a vulnerability-tracking microservice for continuous firmware
-              vulnerability scanning, delivering reliable impact notifications to upstream platforms over NATS.
+              - Architected and built Exein's Vulnerability Tracker from the ground up — a greenfield
+              Rust microservice (hexagonal architecture, Axum + SQLx/Postgres) for continuous firmware
+              vulnerability tracking, authoring the majority of the code from the initial scaffold
+              through production launch. It re-analyzes firmware SBOMs against evolving CVE data and
+              delivers reliable impact notifications to upstream platforms over NATS.
+            </li>
+            <li class="ml-4">
+              - Designed the NATS-based event pipeline orchestrating the cross-service analysis flow —
+              scan-created, SBOM-analysis-completed and vulnerability-checked events carrying work
+              between the analyzer API, the tracker, and the CVE-analysis engine. Implemented both the
+              publisher and consumer sides, cascade-safe scan/object deletion events, in-process worker
+              queues that drain SBOMs into analysis, stream-error recovery so the event loop degrades
+              gracefully instead of failing, and service-to-service API-key authentication.
+            </li>
+            <li class="ml-4">
+              - Built the typed CycloneDX SBOM enrichment pipeline with VEX output — including
+              diagnosing and working around silent data-loss bugs in the upstream CycloneDX
+              deserializer — and wired CVE-severity scoring into the platform's scan scores.
+            </li>
+            <li class="ml-4">
+              - Solved production performance problems end to end: restructured the tracker's Postgres
+              schema (baseline + latest-scan retention) to eliminate slow queries, moved result
+              materialization to streamed row fetching, and cut hot analyzer-API endpoints down to two
+              DB roundtrips via batched score queries.
+            </li>
+            <li class="ml-4">
+              - Owned major analyzer-API features: the AI/CRA compliance workflow (status state machine
+              backed by DB constraints), the S3/MinIO file-storage subsystem with IAM bucket-policy
+              integration tests, PDF report generation, and a full OpenAPI overhaul that made the API
+              self-describing for both humans and AI agents.
             </li>
             <li class="ml-4">
               - Developed an agentic AI tooling layer with API introspection and runtime code generation
