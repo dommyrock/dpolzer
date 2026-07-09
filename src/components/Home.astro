@@ -1,14 +1,21 @@
 ---
 import RecentPosts from "./RecentPosts.astro";
 import Header from "./Header.astro";
+import Hero from "./Hero.astro";
 import FeaturedProject from "./FeaturedProject.astro";
 import Footer from "./Footer.astro";
+import Particles from "./Particles.astro";
 ---
-<div class="min-h-screen bg-dommy-black text-green-500 font-mono">
-  <Header/>
-  <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <FeaturedProject/>
-    <RecentPosts />
-  </main>
-  <Footer/>
+<div class="relative min-h-screen bg-dommy-black text-green-500 font-mono">
+  <Particles/>
+  {/* header/footer keep their own solid bg on blog pages; on home the particles show through */}
+  <div class="relative z-10 [&>header]:bg-transparent [&>footer]:bg-transparent">
+    <Header/>
+    <Hero/>
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <FeaturedProject/>
+      <RecentPosts />
+    </main>
+    <Footer/>
+  </div>
 </div>

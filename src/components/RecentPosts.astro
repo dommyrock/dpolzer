@@ -1,6 +1,5 @@
 ---
 import FormattedDate from "./FormattedDate.astro";
-import MatrixEffect from "./matrix.astro";
 import { Certificate } from "@phosphor-icons/react";
 
 let posts = [
@@ -121,7 +120,7 @@ posts = posts.map((post, index, arr) => ({
   <h2 class="text-3xl font-bold mb-8 border-b border-green-500 pb-2">Recent Posts</h2>
   <div>
     {
-      posts.map((post, index) => (
+      posts.map((post) => (
         <>
           <div class="border border-green-500 p-6 hover:bg-gray-900 transition-colors duration-300">
             <div class="flex items-start justify-between gap-4 mb-2">
@@ -162,8 +161,7 @@ posts = posts.map((post, index, arr) => ({
               } */}
             </div>
           </div>
-          {/* PERF: show Only for first 5 posts */}
-          {index < 5 ? <MatrixEffect id={`matrix-${post.id}`} /> : <div class="pb-2" />}
+          <div class="pb-3" />
         </>
       ))
     }
