@@ -12,7 +12,8 @@ import Particles from "./Particles.astro";
   <div class="relative z-10 [&>header]:bg-transparent [&>footer]:bg-transparent">
     <Header/>
     <Hero/>
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    {/* relative so content paints above the hero sphere canvas spilling in from above */}
+    <main class="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <FeaturedProject/>
       <RecentPosts />
     </main>
