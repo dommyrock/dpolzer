@@ -1,13 +1,13 @@
 ---
-title: 'MIT Applied AI & Data Science Certificate — Curriculum Completion'
-description: 'Reflections on finishing the MIT Applied AI & Data Science program (Aug 2025 – Mar 2026), plus my deep-learning capstone — detecting malaria from red blood cell images with a custom CNN at 97% accuracy.'
+title: 'MIT Applied AI & Data Science Associate Program — Curriculum Completion'
+description: 'Reflections on finishing MIT''s six-month Applied AI & Data Science associate program (Aug 2025 – Mar 2026), plus my deep-learning capstone — detecting malaria from red blood cell images with a custom CNN at 97% accuracy.'
 pubDate: 'Mar 1 2026'
 heroImage: '/mit-capstone-malaria.jpg'
 ---
 
 From **August 2025 to March 2026** I completed the
-[MIT Applied AI & Data Science program](https://professional.mit.edu/course-catalog/applied-ai-and-data-science-program)
-— a hands-on, project-driven curriculum run by MIT Professional Education together with Great Learning.
+[MIT Applied AI & Data Science associate program](https://professional.mit.edu/course-catalog/applied-ai-and-data-science-program)
+— a six-month, hands-on, project-driven curriculum run by MIT Professional Education together with Great Learning.
 [View my MIT credential](https://credentials.professional.mit.edu/02bb6f4e-712f-4c45-b361-6a9e40ce03be#acc.trT3JNAj).
 
 ## Capstone Project — Deep Learning: Malaria Detection
@@ -65,5 +65,5 @@ My learnings and EDA analysis (HTML) can be
 ## Links
 
 - [Program curriculum](https://professional.mit.edu/course-catalog/applied-ai-and-data-science-program)
-- [My MIT certificate](https://credentials.professional.mit.edu/02bb6f4e-712f-4c45-b361-6a9e40ce03be#acc.trT3JNAj)
+- [My MIT credential](https://credentials.professional.mit.edu/02bb6f4e-712f-4c45-b361-6a9e40ce03be#acc.trT3JNAj)
 - [Final capstone presentation](https://docs.google.com/presentation/d/1XGz0bJtcsOEjOp7E4xMRIpVmS8TrAEUz/edit?usp=sharing&ouid=110719831662336020514&rtpof=true&sd=true)
