@@ -1,54 +1,87 @@
 ---
 import { GithubLogo, Globe } from "@phosphor-icons/react";
+import FormattedDate from "./FormattedDate.astro";
 
-const liveUrl = "https://hike-trip.dominik-polzer.workers.dev/";
-const repoUrl = "https://github.com/dommyrock/hike-trip";
-const description =
-  "A mobile-friendly, installable PWA I built and deployed to make planning and navigating a hiking trip with friends easier. A fast trail finder for two base regions — Ortisei / Val Gardena (Dolomites) and Kranjska Gora (Julian Alps · Triglav National Park) — with trails drawn on an interactive OpenStreetMap, colour-coded by difficulty, plus search, filtering and a card per trail showing distance from your base, peak height, length, ascent and walking time. Installs to your home screen and works offline.";
-const tags = ["Astro", "Leaflet", "Cloudflare Workers", "D1 / SQLite", "PWA", "OpenStreetMap"];
+interface Project {
+  title: string;
+  liveUrl: string;
+  repoUrl?: string; // omit for private repos
+  description: string;
+  tags: string[];
+  date?: Date;
+}
+
+const projects: Project[] = [
+  {
+    title: "MacroView — Palantir for Finance",
+    liveUrl: "https://macro-view.com/",
+    description:
+      "Macro-economic insights for your AI agents. MacroView's goal is to automate and enhance the general public's knowledge about finance — giving people the context they need to make more informed decisions about what to invest in, and what the safe-haven options are when markets slump and the Mag 7, S&P 500 and QQQ fail.",
+    tags: ["AI Agents", "Macro Economics", "Finance", "Market Insights", "Investing"],
+    date: new Date("2026-07-16"),
+  },
+  {
+    title: "Alpine Trails — Hiking Trip Planner",
+    liveUrl: "https://hike-trip.dominik-polzer.workers.dev/",
+    repoUrl: "https://github.com/dommyrock/hike-trip",
+    description:
+      "A mobile-friendly, installable PWA I built and deployed to make planning and navigating a hiking trip with friends easier. A fast trail finder for two base regions — Ortisei / Val Gardena (Dolomites) and Kranjska Gora (Julian Alps · Triglav National Park) — with trails drawn on an interactive OpenStreetMap, colour-coded by difficulty, plus search, filtering and a card per trail showing distance from your base, peak height, length, ascent and walking time. Installs to your home screen and works offline.",
+    tags: ["Astro", "Leaflet", "Cloudflare Workers", "D1 / SQLite", "PWA", "OpenStreetMap"],
+  },
+];
 ---
 
 <section class="mb-16">
-  <h2 class="text-3xl font-bold mb-8 border-b border-green-500 pb-2">Latest Project</h2>
-  <div class="post-card p-8">
-    <h3 class="text-2xl font-semibold mb-4">
-      <a href={liveUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
-        Alpine Trails — Hiking Trip Planner
-      </a>
-    </h3>
-    <p class="mb-4 text-base text-gray-300">
-      {description}
-    </p>
-    <div class="flex flex-wrap gap-2 mb-6">
-      {
-        tags.map((tag) => (
-          <span class="px-2 py-1 bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-semibold rounded-none">
-            {tag}
-          </span>
-        ))
-      }
-    </div>
-    <div class="flex items-center justify-start gap-5">
-      <a
-        href={liveUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Open the live app"
-        title="Open the live app"
-        class="text-green-500 hover:text-green-400 transition-colors"
-      >
-        <Globe size={28} />
-      </a>
-      <a
-        href={repoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="View source on GitHub"
-        title="View source on GitHub"
-        class="text-green-500 hover:text-green-400 transition-colors"
-      >
-        <GithubLogo size={28} />
-      </a>
-    </div>
-  </div>
+  <h2 class="text-3xl font-bold mb-8 border-b border-green-500 pb-2">Featured Projects</h2>
+  {
+    projects.map((project) => (
+      <>
+        <div class="post-card p-8">
+          <h3 class="text-2xl font-semibold mb-4">
+            <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
+              {project.title}
+            </a>
+          </h3>
+          <p class="mb-4 text-base text-gray-300">{project.description}</p>
+          <div class="flex flex-wrap gap-2 mb-6">
+            {project.tags.map((tag) => (
+              <span class="px-2 py-1 bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-semibold rounded-none">
+                {tag}
+              </span>
+            ))}
+          </div>
+          <div class="flex items-center justify-start gap-5">
+            <a
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open the live app"
+              title="Open the live app"
+              class="text-green-500 hover:text-green-400 transition-colors"
+            >
+              <Globe size={28} />
+            </a>
+            {project.repoUrl && (
+              <a
+                href={project.repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View source on GitHub"
+                title="View source on GitHub"
+                class="text-green-500 hover:text-green-400 transition-colors"
+              >
+                <GithubLogo size={28} />
+              </a>
+            )}
+          </div>
+          {project.date && (
+            <div class="date">
+              <FormattedDate date={project.date} />
+            </div>
+          )}
+        </div>
+        <div class="pb-3" />
+      </>
+    ))
+  }
 </section>
