@@ -2,6 +2,7 @@
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseHead /> component.
 import '../styles/global.css';
+import { SITE_TITLE } from '../consts';
 
 interface Props {
 	title: string;
@@ -12,13 +13,25 @@ interface Props {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 const { title, description, image = '/thumb.jpg' } = Astro.props;
+
+// Google only reads WebSite site-name markup from the domain root, so the
+// structured data below is emitted on the home page only. Without it Search
+// falls back to the registrable domain (pages.dev) and labels the result
+// "Cloudflare" instead of "D.Polzer".
+const isHome = Astro.url.pathname === '/';
+const siteUrl = Astro.site?.href ?? '/';
 ---
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="generator" content={Astro.generator} />
+
+<!-- Favicons. Google's favicon crawler looks for /favicon.ico at the site root
+     first, so ship the .ico alongside the scalable SVG. -->
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
 <!-- Font preloads -->
 <link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
@@ -34,6 +47,7 @@ const { title, description, image = '/thumb.jpg' } = Astro.props;
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website" />
+<meta property="og:site_name" content={SITE_TITLE} />
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
@@ -45,3 +59,19 @@ const { title, description, image = '/thumb.jpg' } = Astro.props;
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+<!-- Site name for Google Search results -->
+{
+	isHome && (
+		<script
+			type="application/ld+json"
+			set:html={JSON.stringify({
+				'@context': 'https://schema.org',
+				'@type': 'WebSite',
+				name: SITE_TITLE,
+				alternateName: ['Dominik Polzer', 'dominik.polzer'],
+				url: siteUrl,
+			})}
+		/>
+	)
+}

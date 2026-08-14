@@ -170,8 +170,31 @@ hr {
 	body {
 		font-size: 18px;
 	}
+	/* On phones the base `max-width: calc(100% - 2em)` stacked a second gutter on
+	   top of each page's own container padding, so cards ended up ~64px narrower
+	   than the viewport. Let <main> fill the screen and keep a single 1em gutter
+	   left and right — pages that set their own horizontal padding (the home page
+	   uses px-4) simply override it with the same value. */
 	main {
-		padding: 1em;
+		width: 100%;
+		max-width: 100%;
+		padding: 1.5em 1em;
+	}
+	/* The desktop scale (h1 = 3.052em) blows post titles up to ~55px on a phone
+	   and shreds them across six lines. Tailwind runs with important:true, so
+	   anything carrying a text-* utility keeps its own size — this only reins in
+	   the unstyled headings: post titles and markdown content. */
+	h1 {
+		font-size: 2.1em;
+	}
+	h2 {
+		font-size: 1.8em;
+	}
+	h3 {
+		font-size: 1.45em;
+	}
+	h4 {
+		font-size: 1.25em;
 	}
 }
 
