@@ -125,53 +125,46 @@ posts = posts.map((post, index, arr) => ({
 }));
 ---
 
-<section>
+<section id="posts" class="scroll-mt-6">
   <h2 class="text-2xl sm:text-3xl font-bold mb-8 border-b border-green-500 pb-2">Recent Posts</h2>
-  <div>
+  {/* Narrower than the featured projects: post summaries are short. */}
+  <div class="mx-auto flex w-full flex-col gap-4 lg:w-[70%]">
     {
       posts.map((post) => (
-        <>
-          <div class="post-card p-4 sm:p-6">
-            <div class="flex items-start justify-between gap-3 sm:gap-4 mb-2">
-              <h3 class="text-lg sm:text-xl font-semibold break-words">
-                <a href={`/blog/${post.slug}`} class="hover:underline">
-                  {post.title}
-                </a>
-              </h3>
-              {post.certUrl && (
-                <a
-                  href={post.certUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="View MIT credential"
-                  title="View MIT credential"
-                  class="text-red-400 hover:text-red-300 transition-colors shrink-0"
-                >
-                  <Certificate size={28} />
-                </a>
-              )}
-            </div>
-            <p class="text-base text-gray-300 mb-4">{post.summary}</p>
+        <div class="card p-5 sm:p-6">
+          <div class="flex items-start justify-between gap-3 sm:gap-4 mb-2">
+            <h3 class="text-lg sm:text-xl font-semibold break-words">
+              <a href={`/blog/${post.slug}`} class="hover:underline">
+                {post.title}
+              </a>
+            </h3>
+            {post.certUrl && (
+              <a
+                href={post.certUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View MIT credential"
+                title="View MIT credential"
+                class="text-red-400 hover:text-red-300 transition-colors shrink-0"
+              >
+                <Certificate size={26} />
+              </a>
+            )}
+          </div>
+          <p class="mb-4 text-[0.95rem] leading-relaxed text-gray-300">{post.summary}</p>
+          <div class="flex flex-wrap items-end justify-between gap-3">
             <div class="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
-                <span class="px-2 py-1 bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-semibold rounded-none">
+                <span class="px-2 py-0.5 rounded-md bg-green-500/10 border border-green-500/20 text-green-300 text-[11px] font-medium">
                   {tag}
                 </span>
               ))}
             </div>
-            <div class="date">
+            <span class="text-xs text-gray-500">
               <FormattedDate date={post.date} />
-              {/* {
-                updatedDate && (
-                  <div class="last-updated-on">
-                    Last updated on <FormattedDate date={updatedDate} />
-                  </div>
-                )
-              } */}
-            </div>
+            </span>
           </div>
-          <div class="pb-3" />
-        </>
+        </div>
       ))
     }
   </div>
