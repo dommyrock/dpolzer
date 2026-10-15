@@ -1,17 +1,12 @@
 ---
-import HeaderLink from "./HeaderLink.astro";
-import { Terminal } from "@phosphor-icons/react";
-const today = new Date();
+const year = new Date().getFullYear();
 ---
 
-<footer class="rule-top mt-16 bg-dommy-black">
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-    <div class="flex w-full flex-wrap items-center justify-center gap-x-2 text-base text-gray-300">
-      <span>{new Date().getFullYear()} DOMINIK POLZER |</span>
-      <div class="flex items-center gap-1">
-        <Terminal size={32} />
-        <HeaderLink href="/blog">ls ./posts</HeaderLink>
-      </div>
-    </div>
+<footer class="relative z-20 mt-16 border-t border-[var(--border-soft)] bg-[var(--bg)] font-mono">
+  <div
+    class="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-[13px] text-[var(--text-muted)] sm:px-8"
+  >
+    <span>© {year} DOMINIK POLZER</span>
+    <a href="/blog" class="text-[var(--accent)] no-underline hover:text-[var(--accent-soft)]">&gt;_ ls ./posts</a>
   </div>
 </footer>

@@ -1,0 +1,20 @@
+---
+// A numbered section title with a hairline running to the right edge:
+// "01  Featured projects ────────".
+interface Props {
+  num?: string;
+  title: string;
+  level?: "h1" | "h2";
+}
+
+const { num, title, level = "h2" } = Astro.props;
+const Heading = level;
+---
+
+<div class="mb-8 flex items-center gap-4">
+  {num && <span class="font-mono text-[13px] text-[var(--accent)]">{num}</span>}
+  <Heading class="m-0 font-display text-[26px] font-semibold leading-tight tracking-[0.02em] text-[var(--text-strong)] sm:text-[28px]">
+    {title}
+  </Heading>
+  <div class="h-px flex-1 bg-[var(--border)]" aria-hidden="true"></div>
+</div>

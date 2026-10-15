@@ -8,77 +8,24 @@ import Header from "../components/Header.astro";
 type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+// The path as a terminal location in the title band, e.g. ~/blog/<slug>
+const location = "~" + Astro.url.pathname.replace(/\/$/, "");
 ---
 
 <html lang="en">
   <head>
     <BaseHead title={title} description={description} />
-    <style>
-      main {
-        max-width: 100%;
-        margin: 0;
-      }
-      .hero-image {
-        width: 760px;
-        max-width: calc(100% - 2em);
-        margin: 0 auto 2.5rem;
-      }
-      .hero-image img {
-        display: block;
-        width: 100%;
-        border-radius: 12px;
-        box-shadow: var(--box-shadow);
-      }
-      .title {
-        margin-bottom: 2.5rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-soft);
-      }
-      .date {
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
-        letter-spacing: 0.02em;
-        color: var(--text-muted);
-        margin-bottom: 0.75rem;
-      }
-      .last-updated-on {
-        font-style: italic;
-      }
-    </style>
     <style is:global>
-      /* Post body: a ~70 character column, normal type sizes, and quiet code,
-         table and quote styles on the dark gray background. Also used by /about. */
-      body {
-        background-image: none !important;
-      }
+      /* Post body (also /about): a ~70 character column, Chakra Petch headings,
+         readable sans text, and code, table and quote panels on the graphite
+         ground. */
       .prose {
         width: 760px;
-        max-width: calc(100% - 2em);
+        max-width: calc(100% - 2.5rem);
         margin: auto;
         font-size: 1.0625rem;
         line-height: 1.75;
         color: var(--text);
-      }
-      .prose .title h1 {
-        font-size: clamp(1.9rem, 1.3rem + 2.2vw, 2.6rem);
-        line-height: 1.15;
-        letter-spacing: -0.02em;
-        margin: 0;
-      }
-      .prose h2 {
-        font-size: 1.5rem;
-        letter-spacing: -0.01em;
-        margin: 2.6em 0 0.8em;
-        padding-bottom: 0.35em;
-        border-bottom: 1px solid var(--border-soft);
-      }
-      .prose h3 {
-        font-size: 1.2rem;
-        margin: 2em 0 0.6em;
-      }
-      .prose h4 {
-        font-size: 1.05rem;
-        margin: 1.6em 0 0.5em;
       }
       .prose h1,
       .prose h2,
@@ -86,8 +33,30 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
       .prose h4,
       .prose h5,
       .prose h6 {
+        font-family: var(--font-display);
         color: var(--text-strong);
         line-height: 1.3;
+        letter-spacing: 0.01em;
+      }
+      .prose h2 {
+        font-size: 1.55rem;
+        font-weight: 600;
+        margin: 2.6em 0 0.8em;
+      }
+      .prose h2::before {
+        content: "// ";
+        font-family: var(--font-mono);
+        font-size: 0.8em;
+        color: var(--accent);
+      }
+      .prose h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 2em 0 0.6em;
+      }
+      .prose h4 {
+        font-size: 1.05rem;
+        margin: 1.6em 0 0.5em;
       }
       .prose p {
         margin: 0 0 1.25em;
@@ -96,13 +65,13 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         color: var(--text-strong);
       }
       .prose a {
-        color: var(--accent-soft);
+        color: var(--accent);
         text-decoration: underline;
         text-decoration-color: rgba(74, 222, 128, 0.35);
         text-underline-offset: 3px;
-        transition: text-decoration-color 0.15s ease;
       }
       .prose a:hover {
+        color: var(--accent-soft);
         text-decoration-color: currentColor;
       }
 
@@ -112,7 +81,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         padding-left: 1.4em;
       }
       .prose ul {
-        list-style: disc;
+        list-style: square;
       }
       .prose ol {
         list-style: decimal;
@@ -129,13 +98,13 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         margin: 0.35em 0 0;
       }
 
-      /* Code blocks: Shiki colors the tokens (astro.config.mjs), the block
-         itself sits on the card surface. */
+      /* Code blocks: Shiki colors the tokens (astro.config.mjs), the block sits
+         on the panel surface. */
       .prose pre {
         margin: 1.5em 0 1.75em;
         padding: 0.95rem 1.15rem;
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 4px;
         background-color: var(--surface) !important;
         font-size: 0.85rem;
         line-height: 1.65;
@@ -161,20 +130,22 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
         vertical-align: top;
       }
       .prose th {
-        background-color: var(--surface-2);
+        background-color: var(--surface);
         color: var(--text-strong);
-        font-weight: 700;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
       }
       .prose tbody tr:nth-child(even) td {
-        background-color: rgba(255, 255, 255, 0.018);
+        background-color: rgba(255, 255, 255, 0.015);
       }
 
       .prose blockquote {
         margin: 1.5em 0;
         padding: 0.8em 1.1em;
-        border-left: 3px solid var(--accent);
-        border-radius: 0 8px 8px 0;
-        background-color: rgba(34, 197, 94, 0.06);
+        border-left: 2px solid var(--accent);
+        background-color: rgba(74, 222, 128, 0.06);
         color: var(--text);
       }
       .prose blockquote p:last-child {
@@ -207,29 +178,42 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 
   <body class="bg-dommy-black">
     <Header />
-    <main class="container min-h-screen mx-auto lg:px-8 py-12 sm:px-0">
+    <section class="grid-band border-b border-[var(--border-soft)]">
+      <div class="mx-auto w-[760px] max-w-[calc(100%-2.5rem)] pb-10 pt-14 sm:pb-12 sm:pt-20">
+        <div class="mb-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          <span class="normal-case tracking-normal text-[var(--teal)]">{location}</span>
+          <FormattedDate date={pubDate} />
+          {
+            updatedDate && (
+              <span>
+                updated <FormattedDate date={updatedDate} />
+              </span>
+            )
+          }
+        </div>
+        <h1
+          class="m-0 font-display text-[clamp(1.9rem,1.3rem+2.2vw,2.75rem)] font-semibold leading-[1.15] tracking-[0.005em] text-[var(--text-strong)]"
+        >
+          {title}
+        </h1>
+      </div>
+    </section>
+    <main class="m-0 w-full max-w-none px-0 pb-12 pt-10 sm:pt-12">
       <article>
         {
           heroImage && (
-            <div class="hero-image">
-              <img width={1020} height={510} src={heroImage} alt="" />
+            <div class="mx-auto mb-10 w-[760px] max-w-[calc(100%-2.5rem)]">
+              <img
+                width={1020}
+                height={510}
+                src={heroImage}
+                alt=""
+                class="block w-full rounded border border-[var(--border)]"
+              />
             </div>
           )
         }
         <div class="prose">
-          <div class="title">
-            <div class="date">
-              <FormattedDate date={pubDate} />
-              {
-                updatedDate && (
-                  <div class="last-updated-on">
-                    Last updated on <FormattedDate date={updatedDate} />
-                  </div>
-                )
-              }
-            </div>
-            <h1>{title}</h1>
-          </div>
           <slot />
         </div>
       </article>
