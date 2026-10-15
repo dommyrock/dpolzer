@@ -8,14 +8,25 @@
  */
 
 :root {
+	/* Site palette: dark gray surfaces, the site green as the accent. */
+	--bg: #131519;
+	--surface: #1a1d23;
+	--surface-2: #21252c;
+	--border: #2a2f37;
+	--border-soft: rgba(255, 255, 255, 0.06);
+	--text: #c4ccd6;
+	--text-strong: #eef1f5;
+	--text-muted: #8b949e;
 	--accent: #22c55e;
-	--black: #000;
+	--accent-soft: #4ade80;
+	--font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", "Cascadia Code", Menlo, Consolas,
+		"Liberation Mono", monospace;
+
 	--gray: 96, 115, 159;
 	--gray-light: 229, 233, 240;
 	--gray-dark: 34, 41, 57;
 	--gray-gradient: rgba(var(--gray-light), 50%), #fff;
-	--box-shadow: 0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
-		0 16px 32px rgba(var(--gray), 33%);
+	--box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 @font-face {
@@ -31,18 +42,18 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-} 
+}
 
 html {
-	background-color: #0f0f10;
+	background-color: var(--bg);
 }
 
 /* Card with a border-only gradient ring: light grey on the left edge, fading
    into the site green just past the corner curve; interior stays transparent.
-   Used by the Latest Project and Recent Posts cards on the homepage. */
+   The first featured project uses it, so the particles show through. */
 .post-card {
 	position: relative;
-	border-radius: 10px;
+	border-radius: 12px;
 }
 .post-card::before {
 	content: "";
@@ -64,16 +75,68 @@ html {
 	pointer-events: none;
 }
 
+/* Solid card for the other featured projects and the posts list: a dark
+   surface over the particles, a hairline border that turns green on hover. */
+.card {
+	position: relative;
+	border-radius: 12px;
+	background: linear-gradient(180deg, rgba(31, 35, 42, 0.94), rgba(24, 27, 33, 0.94));
+	border: 1px solid var(--border);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.04),
+		0 12px 32px -16px rgba(0, 0, 0, 0.7);
+	backdrop-filter: blur(6px);
+	transition:
+		border-color 0.2s ease,
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+}
+.card:hover {
+	border-color: rgba(34, 197, 94, 0.4);
+	transform: translateY(-2px);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.05),
+		0 18px 40px -18px rgba(34, 197, 94, 0.25);
+}
+
+/* A hairline that fades out toward both edges; used under the header and
+   above the footer. */
+.rule-bottom,
+.rule-top {
+	position: relative;
+}
+.rule-bottom::after,
+.rule-top::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(148, 163, 184, 0.18) 20%,
+		rgba(34, 197, 94, 0.35) 50%,
+		rgba(148, 163, 184, 0.18) 80%,
+		transparent
+	);
+	pointer-events: none;
+}
+.rule-bottom::after {
+	bottom: 0;
+}
+.rule-top::before {
+	top: 0;
+}
+
 body {
 	font-family: 'Atkinson', sans-serif;
 	margin: 0;
 	padding: 0;
 	text-align: left;
-	background: linear-gradient(var(--gray-gradient)) no-repeat;
-	background-size: 100% 600px;
 	word-wrap: break-word;
 	overflow-wrap: break-word;
-	color: rgb(var(--gray-dark));
+	color: var(--text);
 	font-size: 20px;
 	line-height: 1.7;
 }
@@ -85,17 +148,18 @@ main {
 }
 .date {
 	margin-bottom: 0.5em;
-	color: rgb(var(--gray));
- }
- 
+	color: var(--text-muted);
+}
+
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
+	/* No color: headings inherit it (green on the home page); post headings
+	   are colored by .prose in layouts/BlogPost.astro. */
 	margin: 0 0 0.5rem 0;
-	color: rgb(var(--black));
 	line-height: 1.2;
 }
 h1 {
@@ -121,13 +185,10 @@ a {
 	color: var(--accent);
 }
 a:hover {
-	color: var(--accent);
+	color: var(--accent-soft);
 }
 p {
 	margin-bottom: 1em;
-}
-.prose p {
-	margin-bottom: 2em;
 }
 textarea {
 	width: 100%;
@@ -136,35 +197,32 @@ textarea {
 input {
 	font-size: 16px;
 }
-table {
-	width: 100%;
-}
 img {
 	max-width: 100%;
 	height: auto;
 	border-radius: 8px;
 }
-code {
-	padding: 2px 5px;
-	background-color: rgb(var(--gray-light));
-	border-radius: 2px;
-}
+code,
+kbd,
 pre {
-	padding: 1.5em;
-	border-radius: 8px;
+	font-family: var(--font-mono);
+}
+/* Inline code: a quiet chip, a little smaller than the text around it. */
+:not(pre) > code {
+	font-size: 0.85em;
+	padding: 0.15em 0.4em;
+	border-radius: 6px;
+	background-color: var(--surface-2);
+	border: 1px solid var(--border-soft);
+	color: var(--text-strong);
 }
 pre > code {
 	all: unset;
-}
-blockquote {
-	border-left: 4px solid var(--accent);
-	padding: 0 0 0 20px;
-	margin: 0px;
-	font-size: 1.333em;
+	font-family: var(--font-mono);
 }
 hr {
 	border: none;
-	border-top: 1px solid rgb(var(--gray-light));
+	border-top: 1px solid var(--border-soft);
 }
 @media (max-width: 720px) {
 	body {
@@ -180,10 +238,10 @@ hr {
 		max-width: 100%;
 		padding: 1.5em 1em;
 	}
-	/* The desktop scale (h1 = 3.052em) blows post titles up to ~55px on a phone
-	   and shreds them across six lines. Tailwind runs with important:true, so
-	   anything carrying a text-* utility keeps its own size — this only reins in
-	   the unstyled headings: post titles and markdown content. */
+	/* The desktop scale (h1 = 3.052em) blows titles up on a phone. Tailwind runs
+	   with important:true, so anything carrying a text-* utility keeps its own
+	   size; this only reins in unstyled headings. Post headings are sized by
+	   .prose in layouts/BlogPost.astro. */
 	h1 {
 		font-size: 2.1em;
 	}

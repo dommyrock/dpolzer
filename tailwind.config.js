@@ -4,7 +4,8 @@ export default {
   important:true,
   theme: {
     extend: {
-      colors:{'dommy-black':"#0f0f10"}
+      // Same as --bg in src/styles/global.css.
+      colors:{'dommy-black':"#131519"}
     },
   },
   plugins: [],
