@@ -82,7 +82,7 @@ html {
 
 /* Card for the other featured projects and the posts list: a translucent
    surface that fades toward the bottom, so the particles stay faintly visible,
-   and a hairline border that turns green on hover. */
+   and a hairline border that glows green on hover, without motion. */
 .card {
 	position: relative;
 	border-radius: 12px;
@@ -92,14 +92,9 @@ html {
 		inset 0 1px 0 rgba(255, 255, 255, 0.04),
 		0 12px 32px -16px rgba(0, 0, 0, 0.7);
 	backdrop-filter: blur(3px);
-	transition:
-		border-color 0.2s ease,
-		transform 0.2s ease,
-		box-shadow 0.2s ease;
 }
 .card:hover {
 	border-color: rgba(34, 197, 94, 0.4);
-	transform: translateY(-2px);
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.05),
 		0 18px 40px -18px rgba(34, 197, 94, 0.25);
