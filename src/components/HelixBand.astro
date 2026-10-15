@@ -3,7 +3,8 @@
 // style of the home page's helix (Helix.astro), with drifting specks and one
 // green cluster where the dots link up, as they do near the cursor there.
 // Static SVG built at build time; `seed` (the page path) varies the phase,
-// pitch and the green cluster from page to page.
+// pitch and the green cluster from page to page. Hovering the band (an
+// ancestor with class `helix-host`) turns the helix green.
 interface Props {
   seed: string;
 }
@@ -40,7 +41,7 @@ const round = (v: number) => Math.round(v * 10) / 10;
 const tint = (g: number) =>
   `rgb(${GREY.map((c, i) => Math.round(c + (GREEN[i] - c) * g)).join(",")})`;
 
-type Dot = { x: number; y: number; r: number; a: number; g: number };
+type Dot = { x: number; y: number; r: number; a: number; g: number; pair: boolean };
 const dots: Dot[] = [];
 
 // two strands, dimmer and smaller where they turn away
@@ -52,7 +53,7 @@ for (let x = -10; x <= W + 10; x += 9) {
     for (let k = 0; k < count; k++) {
       const dx = x + (rand() - 0.5) * 6;
       const dy = cy + amp * Math.sin(t) + (rand() - 0.5) * 7;
-      dots.push({ x: dx, y: dy, r: (0.5 + rand() * rand() * 2.2) * (0.8 + 0.5 * depth), a: 0.08 + 0.3 * depth, g: near(dx, dy) });
+      dots.push({ x: dx, y: dy, r: (0.5 + rand() * rand() * 2.2) * (0.8 + 0.5 * depth), a: 0.08 + 0.3 * depth, g: near(dx, dy), pair: false });
     }
   }
 }
@@ -64,7 +65,7 @@ for (let x = 0; x <= W; x += 36) {
   for (let k = 1; k < 7; k++) {
     const y = y0 + ((y1 - y0) * k) / 7 + (rand() - 0.5) * 2;
     const dx = x + (rand() - 0.5) * 2;
-    dots.push({ x: dx, y, r: 0.4 + rand() * 0.9, a: 0.06 + rand() * 0.06, g: near(dx, y) });
+    dots.push({ x: dx, y, r: 0.4 + rand() * 0.9, a: 0.06 + rand() * 0.06, g: near(dx, y), pair: true });
   }
 }
 
@@ -94,7 +95,7 @@ for (let i = 0; i < cluster.length && links.length < 60; i++) {
   viewBox={`0 0 ${W} ${H}`}
   preserveAspectRatio="xMidYMid slice"
 >
-  <g fill="rgb(222,228,234)">
+  <g class="specks" fill="rgb(222,228,234)">
     {specks.map((s) => <circle cx={round(s.x)} cy={round(s.y)} r={round(s.r)} fill-opacity={Math.round(s.a * 100) / 100} />)}
   </g>
   <g stroke="rgb(74,222,128)" stroke-width="0.6">
@@ -104,22 +105,46 @@ for (let i = 0; i < cluster.length && links.length < 60; i++) {
       ))
     }
   </g>
-  <g fill="rgb(222,228,234)">
-    {
-      dots.map((d) =>
-        d.g > 0 ? (
-          <circle cx={round(d.x)} cy={round(d.y)} r={round(d.r * (1 + d.g * 0.3))} fill={tint(d.g)} fill-opacity={Math.round(Math.min(1, d.a + d.g * 0.4) * 100) / 100} />
-        ) : (
-          <circle cx={round(d.x)} cy={round(d.y)} r={round(d.r)} fill-opacity={Math.round(d.a * 100) / 100} />
-        ),
-      )
-    }
-  </g>
+  {
+    [true, false].map((pair) => (
+      <g class:list={["dots", pair ? "pairs" : "strands"]} fill="rgb(222,228,234)">
+        {dots
+          .filter((d) => d.pair === pair)
+          .map((d) =>
+            d.g > 0 ? (
+              <circle cx={round(d.x)} cy={round(d.y)} r={round(d.r * (1 + d.g * 0.3))} fill={tint(d.g)} fill-opacity={Math.round(Math.min(1, d.a + d.g * 0.4) * 100) / 100} />
+            ) : (
+              <circle cx={round(d.x)} cy={round(d.y)} r={round(d.r)} fill-opacity={Math.round(d.a * 100) / 100} />
+            ),
+          )}
+      </g>
+    ))
+  }
 </svg>
 
 <style>
   .helix-band {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  }
+  .dots {
+    transition: filter 0.35s ease;
+  }
+  .dots circle {
+    transition:
+      fill 0.35s ease,
+      fill-opacity 0.35s ease;
+  }
+  /* On hover the dots lose their depth shading for one bright green. */
+  :global(.helix-host:hover) .dots {
+    filter: drop-shadow(0 0 4px rgba(74, 222, 128, 0.7));
+  }
+  :global(.helix-host:hover) .strands circle {
+    fill: var(--accent-soft);
+    fill-opacity: 0.6;
+  }
+  :global(.helix-host:hover) .pairs circle {
+    fill: var(--accent);
+    fill-opacity: 0.3;
   }
 </style>
