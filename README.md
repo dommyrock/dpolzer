@@ -1,89 +1,72 @@
-## Build configs
+# dpolzer
 
-[Github static pages - Astro docs](https://docs.astro.build/en/guides/deploy/github/)
+My personal site and blog: work experience, featured projects and posts. A fully static [Astro](https://docs.astro.build) site with Tailwind CSS, hosted on Cloudflare Pages at https://dpolzer.pages.dev.
 
-[Cloudflare pages hosting - Astro docs](https://docs.astro.build/en/guides/deploy/cloudflare/)
-
-```bash
-npx astro add cloudflare
-```
-### Other docs
-
-- [Cloudflare pages build - config](https://developers.cloudflare.com/pages/configuration/build-configuration/) <br>
-- [Cloudflare blog - Deploy Astro site ](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/)
-
-
-### Configure Custom 'headers' file (to enable font caching)
-- [Astro docs](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)
-- [Cloudflare docs](https://developers.cloudflare.com/pages/configuration/headers/)
-
----
-
-# Astro Starter Kit: Blog
-
-```sh
-npm create astro@latest -- --template blog
-```
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/blog)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/blog)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/blog/devcontainer.json)
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-![blog](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
-
-Features:
-
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## Project structure
 
 ```text
-├── public/
+├── public/                  # static files served as-is: images, fonts, favicon
+│   └── _headers             # Cloudflare Pages headers (1-year cache for /fonts/*)
 ├── src/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+│   ├── components/
+│   │   ├── Home.astro       # home page: hero, featured projects, recent posts
+│   │   ├── FeaturedProject.astro  # the featured projects list
+│   │   ├── RecentPosts.astro      # the posts listed on the home page
+│   │   └── ...              # header, footer, hero, particles, head tags
+│   ├── content/blog/        # one Markdown file per post
+│   ├── content.config.ts    # frontmatter schema of the posts
+│   ├── layouts/BlogPost.astro     # page layout of a post and of /about
+│   ├── pages/
+│   │   ├── index.astro      # /
+│   │   ├── about.astro      # /about
+│   │   ├── blog/index.astro # /blog, every post
+│   │   ├── blog/[...slug].astro   # /blog/<slug>
+│   │   └── rss.xml.js       # /rss.xml
+│   ├── styles/global.css
+│   └── consts.ts            # site title and description
+├── astro.config.mjs         # site URL, MDX, sitemap, React, Tailwind
+└── .nvmrc                   # Node 22.12.0
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Commands
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Run from the repository root with Node 22 (`nvm use` reads `.nvmrc`):
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+| Command | What it does |
+|---|---|
+| `npm ci` | Installs the dependencies from `package-lock.json` |
+| `npm run dev` | Starts the dev server at http://localhost:4321, reloading on every change |
+| `npm run build` | Builds the static site into `dist/` |
+| `npm run preview` | Serves `dist/` at http://localhost:4321, as it will be deployed |
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Testing locally
 
-## 🧞 Commands
+1. `npm run dev` and open http://localhost:4321 while you edit; pages reload on save.
+2. Before pushing, `npm run build`. It fails on a post whose frontmatter does not match `src/content.config.ts`, and lists every page it built.
+3. `npm run preview` and check the built pages: `/`, `/blog`, the new `/blog/<slug>/` and `/rss.xml`.
 
-All commands are run from the root of the project, from a terminal:
+## Adding a post
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+1. Add `src/content/blog/<slug>.md`. The file name is the URL slug.
 
-## 👀 Want to learn more?
+   ```markdown
+   ---
+   title: 'Post title'
+   description: 'One or two sentences for the post list and RSS.'
+   pubDate: 'Oct 15 2026'
+   heroImage: '/image-in-public.webp'   # optional
+   ---
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+   Body text. The layout prints the title, so start without a `# heading`.
+   ```
 
-## Credit
+2. Add an entry at the top of the `posts` list in `src/components/RecentPosts.astro`, so it shows on the home page. `/blog`, the sitemap and the RSS feed pick the post up on their own.
+3. Images go in `public/` and are referenced from `/`.
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+Featured projects are a separate list, in `src/components/FeaturedProject.astro`.
+
+## Deployment
+
+Cloudflare Pages builds the site with `npm run build` and serves `dist/`. Every page is prerendered, so there is no SSR adapter and no Worker runs per request. `public/_headers` sets the cache headers.
+
+The site started from Astro's blog template.
