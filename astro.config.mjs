@@ -13,9 +13,9 @@ export default defineConfig({
   site: "https://dpolzer.pages.dev",
   integrations: [mdx(), sitemap(), react()],
   markdown: {
-    // Muted token colors with greens that sit with the site accent. The block
-    // background comes from the post layout (.prose pre), not the theme.
-    shikiConfig: { theme: "vitesse-dark" },
+    // VS Code's default Dark+ token colors. The block background comes from the
+    // post layout (.prose pre), not the theme.
+    shikiConfig: { theme: "dark-plus" },
   },
   //https://docs.astro.build/en/guides/prefetch/
   prefetch: true,
