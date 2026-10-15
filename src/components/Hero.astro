@@ -1,297 +1,90 @@
 ---
-// Hero: centered terminal-style intro over a mouse-reactive dot-sphere canvas
-// (faithful port of the seltz.ai hero animation: a slowly rotating Fibonacci
-// sphere of teal dots, denser toward the bottom so it reads as a horizon.
-// Dots near the cursor get pushed away with a slight swirl, brighten, and
-// link up with short lines). The site-wide drifting specs live in Particles.astro.
+// Hero: a terminal session over the helix background (Helix.astro). `whoami`
+// answers with the role; `$ cd posts` scrolls to the posts, and Helix.astro
+// draws a dotted underline under it on hover and focus.
 ---
 
-{/* no overflow-hidden / border: the sphere canvas spills past the section into <main> */}
-<section class="hero relative">
-  <canvas id="hero-sphere" class="pointer-events-none absolute left-0 top-0 w-full" aria-hidden="true"
-  ></canvas>
-
-  <div class="container relative z-10 mx-auto flex justify-center px-4 py-16 sm:px-6 md:py-24 lg:px-8">
-    {/* A terminal session: `whoami` answers with the role, `cd posts` jumps to the posts below. */}
-    <div class="font-mono text-left">
-      <h1 class="text-2xl font-bold leading-tight sm:text-4xl lg:text-5xl" aria-label="Dominik Polzer">
-        <span class="text-green-500">dominik</span><span class="text-gray-600">@</span><span
-          class="text-teal-300">polzer</span
-        ><span class="text-gray-600">:~$</span> <span class="text-gray-100">whoami</span>
-      </h1>
-      <p class="mt-5 flex items-center justify-center gap-3 text-sm text-gray-200 sm:text-lg">
-        <span class="hero-status-dot h-2 w-2 shrink-0 rounded-full"></span>
-        Distributed Systems Engineer @ Exein
-      </p>
-      <p class="mt-1 text-center text-sm text-gray-400 sm:text-base">
-        10+ years building distributed systems — Rust, .NET and applied AI.
-      </p>
-      <div class="mt-6 text-center">
-        <a href="#posts" class="hero-ls inline-block text-sm sm:text-base">
-          <span class="text-gray-600">$</span> <span class="hero-ls-cmd text-gray-300">cd posts</span><span
-            class="hero-cursor text-green-500">▊</span
-          >
-        </a>
-      </div>
-    </div>
+<section>
+  <div
+    class="mx-auto flex max-w-[1200px] flex-col items-center gap-4 px-5 pb-16 pt-24 text-center sm:px-8 md:pb-20 md:pt-[132px]"
+  >
+    <h1
+      aria-label="Dominik Polzer"
+      class="m-0 font-mono text-[clamp(22px,3.6vw,48px)] font-bold leading-tight tracking-tight"
+    >
+      <span class="text-[var(--accent)]">dominik</span><span class="text-gray-600">@</span><span
+        class="text-[var(--teal)]">polzer</span
+      ><span class="text-gray-600">:~$</span> <span class="text-slate-100">whoami</span>
+    </h1>
+    <p class="mb-0 mt-2.5 flex items-center justify-center gap-3 font-mono text-sm text-[#e6edf3] sm:text-lg">
+      <span class="hero-dot inline-block h-2 w-2 shrink-0 rounded-full"></span>
+      Distributed Systems Engineer @ Exein
+    </p>
+    <p class="m-0 max-w-[680px] font-mono text-sm text-[#8f9caa] sm:text-[15px]">
+      10+ years building distributed systems — Rust, .NET and applied AI.
+    </p>
+    <a
+      href="#posts"
+      data-helix-underline
+      class="cd-posts mt-6 inline-flex min-h-[52px] items-center px-2 font-mono text-base text-[#e6edf3] no-underline"
+    >
+      <span data-helix-underline-text
+        ><span class="mr-2.5 text-[#6b7785]">$</span><span class="cd-cmd">cd posts</span><span
+          class="hero-cursor ml-0.5 text-[var(--accent)]">▊</span
+        ></span
+      >
+    </a>
   </div>
 </section>
 
 <style>
-  .hero {
-    /* subtle horizon glow behind the intro, echoing the reference design */
-    background-image: radial-gradient(
-      ellipse 70% 55% at 50% 110%,
-      rgba(107, 236, 205, 0.07),
-      rgba(34, 197, 94, 0.035) 45%,
-      transparent 70%
-    );
-  }
-  .hero-status-dot {
-    background-color: rgb(107, 236, 205);
-    box-shadow: 0 0 8px rgba(107, 236, 205, 0.8);
+  .hero-dot {
+    background-color: var(--teal);
+    box-shadow: 0 0 10px rgba(45, 212, 191, 0.8);
     animation: hero-pulse 2.4s ease-in-out infinite;
   }
-  .hero-ls:hover .hero-ls-cmd {
-    color: rgb(74, 222, 128);
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
   .hero-cursor {
-    animation: hero-blink 1.1s steps(2, start) infinite;
+    animation: hero-blink 1.1s steps(1, end) infinite;
+  }
+  .cd-cmd {
+    transition:
+      color 0.2s ease,
+      text-shadow 0.2s ease;
+  }
+  .cd-posts:hover .cd-cmd,
+  .cd-posts:focus-visible .cd-cmd {
+    color: var(--accent-soft);
+    text-shadow: 0 0 12px rgba(74, 222, 128, 0.65);
+  }
+  .cd-posts:focus-visible {
+    outline: 1px dashed rgba(74, 222, 128, 0.6);
+    outline-offset: 6px;
   }
   @keyframes hero-pulse {
     0%,
     100% {
       opacity: 1;
+      transform: scale(1);
     }
     50% {
-      opacity: 0.35;
+      opacity: 0.45;
+      transform: scale(0.8);
     }
   }
   @keyframes hero-blink {
-    to {
-      visibility: hidden;
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .hero-status-dot,
+    .hero-dot,
     .hero-cursor {
       animation: none;
     }
   }
 </style>
-
-<script>
-  // Port of the seltz.ai hero canvas (constants match the original bundle).
-  const canvas = document.getElementById("hero-sphere") as HTMLCanvasElement | null;
-  const ctx = canvas?.getContext("2d");
-
-  if (canvas && ctx) {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const coarsePointer = window.matchMedia("(hover: none), (pointer: coarse)").matches;
-
-    const COLOR = "222, 228, 234"; // white-ish grey
-    const COUNT = 3600;
-    const R = 125;
-    const Z_OFFSET = 320;
-    const FOV = 800;
-    const DEPTH_DEN = 445;
-    const ROT_SPEED = 4e-4;
-    const FORCE_RADIUS = 140;
-    const HOVER_RADIUS = 65;
-    const LINK_RADIUS = 40;
-    const MAX_OFFSET = 28;
-
-    // seeded RNG so the sphere looks identical on every load
-    const mulberry = (seed: number) => () => {
-      let t = (seed += 1831565813);
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-    const rand = mulberry(1337);
-    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-    const smooth = (v: number) => v * v * (3 - 2 * v);
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-    type Dot = {
-      x: number; y: number; z: number;
-      keep: boolean; sizeJitter: number;
-      sx: number; sy: number; depth: number; hover: number;
-      ox: number; oy: number; vx: number; vy: number;
-    };
-
-    // Fibonacci sphere, denser toward the bottom (horizon effect)
-    const GOLDEN = Math.PI * (3 - Math.sqrt(5));
-    const dots: Dot[] = [];
-    for (let i = 0; i < COUNT; i++) {
-      const t = 1 - (i / (COUNT - 1)) * 2;
-      const rad = Math.sqrt(Math.max(0, 1 - t * t));
-      const theta = GOLDEN * i;
-      let x = Math.cos(theta) * rad + (rand() - 0.5) * (0.65 / R);
-      let z = Math.sin(theta) * rad + (rand() - 0.5) * (0.65 / R);
-      const n = Math.sqrt(x * x + t * t + z * z) || 1;
-      x /= n;
-      z /= n;
-      // denser toward the bottom of the sphere (screen-down = +y)
-      const keepProb = lerp(0.15, 0.98, smooth(clamp01((t + 1) / 2)));
-      dots.push({
-        x: x * R, y: t * R, z: z * R,
-        keep: rand() < keepProb,
-        sizeJitter: 0.4 + rand() ** 2 * 3.0,
-        sx: 0, sy: 0, depth: 0, hover: 0,
-        ox: 0, oy: 0, vx: 0, vy: 0,
-      });
-    }
-
-    const heroSection = canvas.parentElement as HTMLElement;
-    let width = 0;
-    let height = 0;
-    let fov = FOV;
-    let sphereCy = 0;
-    const resize = () => {
-      const heroRect = heroSection.getBoundingClientRect();
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      if (heroRect.width <= 1 || heroRect.height <= 1) return;
-      width = Math.floor(heroRect.width);
-      // sphere scales with viewport so it breaks out of the text container
-      fov = FOV * Math.min(1.75, Math.max(0.55, width / 820));
-      // sphere anchored to the hero; canvas is tall enough to fit the whole globe
-      sphereCy = heroRect.height * 0.62;
-      height = Math.ceil(sphereCy + fov * 0.62 + 40);
-      canvas.style.height = `${height}px`;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resize();
-    new ResizeObserver(resize).observe(heroSection);
-
-    let mx: number | null = null;
-    let my: number | null = null;
-    const trackPointer = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
-        mx = my = null;
-        return;
-      }
-      mx = x;
-      my = y;
-    };
-    const clearPointer = () => (mx = my = null);
-    if (!coarsePointer) {
-      window.addEventListener("pointermove", trackPointer, { passive: true });
-      window.addEventListener("pointercancel", clearPointer);
-      window.addEventListener("blur", clearPointer);
-    }
-
-    let angle = 0;
-    let rafId = 0;
-    let visible = true;
-
-    const drawFrame = () => {
-      ctx.clearRect(0, 0, width, height);
-      const cx = width / 2;
-      const cy = sphereCy; // anchored to the hero so the top arc frames the text
-      const hovered: Dot[] = [];
-
-      for (const p of dots) {
-        p.hover = 0;
-        if (!p.keep) continue;
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        const rx = p.x * cos - p.z * sin;
-        const rz = p.x * sin + p.z * cos;
-        const zc = rz + Z_OFFSET;
-        if (zc <= 1) continue;
-        const scale = fov / zc;
-        p.sx = rx * scale + cx;
-        p.sy = p.y * scale + cy;
-        p.depth = 1 - Math.min(1, Math.max(0, zc / DEPTH_DEN));
-
-        // push away from the cursor with a slight tangential swirl
-        let tx = 0;
-        let ty = 0;
-        if (mx != null && my != null) {
-          const dx = p.sx - mx;
-          const dy = p.sy - my;
-          const d = Math.sqrt(dx * dx + dy * dy) || 1;
-          if (d < HOVER_RADIUS) {
-            p.hover = smooth(1 - d / HOVER_RADIUS);
-            hovered.push(p);
-          }
-          if (d < FORCE_RADIUS) {
-            const s = smooth(1 - d / FORCE_RADIUS);
-            const nx = dx / d;
-            const ny = dy / d;
-            const f = 30 * s * (0.35 + 0.65 * p.depth);
-            tx = nx * f + -ny * f * 0.25;
-            ty = ny * f + nx * f * 0.25;
-          }
-        }
-        p.vx = (p.vx + (tx - p.ox) * 0.1) * 0.2;
-        p.vy = (p.vy + (ty - p.oy) * 0.1) * 0.2;
-        p.ox = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, p.ox + p.vx));
-        p.oy = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, p.oy + p.vy));
-      }
-
-      // link hovered dots that are close to each other
-      for (let i = 0; i < hovered.length; i++) {
-        const a = hovered[i];
-        const ax = a.sx + a.ox;
-        const ay = a.sy + a.oy;
-        for (let j = i + 1; j < hovered.length; j++) {
-          const b = hovered[j];
-          const bx = b.sx + b.ox;
-          const by = b.sy + b.oy;
-          const dx = ax - bx;
-          const dy = ay - by;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d > LINK_RADIUS) continue;
-          const alpha = (1 - d / LINK_RADIUS) * Math.min(a.hover, b.hover);
-          ctx.strokeStyle = `rgba(${COLOR}, ${0.48 * alpha})`;
-          ctx.lineWidth = 0.6;
-          ctx.beginPath();
-          ctx.moveTo(ax, ay);
-          ctx.lineTo(bx, by);
-          ctx.stroke();
-        }
-      }
-
-      for (const p of dots) {
-        if (!p.keep) continue;
-        const alpha = clamp01(0.045 + 0.18 * p.depth + p.hover * 0.31);
-        const radius =
-          Math.max(0.55, 1.05 * (0.9 + p.depth)) * p.sizeJitter * (1 + p.hover * 0.18);
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(${COLOR}, ${alpha})`;
-        ctx.arc(p.sx + p.ox, p.sy + p.oy, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    };
-
-    const tick = () => {
-      drawFrame();
-      angle += ROT_SPEED;
-      rafId = requestAnimationFrame(tick);
-    };
-    const start = () => {
-      if (!rafId && !reducedMotion) rafId = requestAnimationFrame(tick);
-    };
-    const stop = () => {
-      cancelAnimationFrame(rafId);
-      rafId = 0;
-    };
-
-    new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      visible ? start() : stop();
-    }).observe(canvas);
-
-    if (reducedMotion) drawFrame();
-    else if (visible) start();
-  }
-</script>

@@ -1,6 +1,7 @@
 ---
 import { GithubLogo, Globe } from "@phosphor-icons/react";
 import FormattedDate from "./FormattedDate.astro";
+import SectionHeading from "./SectionHeading.astro";
 
 interface Project {
   title: string;
@@ -8,11 +9,12 @@ interface Project {
   repoUrl?: string; // omit for private repos
   description: string;
   tags: string[];
+  kind: string; // shown after the specimen number, e.g. LIVE
   date?: Date;
 }
 
-// The first project keeps the transparent ring card (.post-card); the rest sit
-// on solid cards (.card), both in src/styles/global.css.
+// The first project sits in a see-through panel with corner brackets, the rest
+// in solid panels (.panel-ghost, .panel-solid in src/styles/global.css).
 const projects: Project[] = [
   {
     title: "MacroView — Palantir for Finance",
@@ -20,6 +22,7 @@ const projects: Project[] = [
     description:
       "Macro-economic insights for your AI agents. MacroView's goal is to automate and enhance the general public's knowledge about finance — giving people the context they need to make more informed decisions about what to invest in, and what the safe-haven options are when markets slump and the Mag 7, S&P 500 and QQQ fail.",
     tags: ["AI Agents", "Macro Economics", "Finance", "Market Insights", "Investing"],
+    kind: "LIVE",
     date: new Date("2026-07-16"),
   },
   {
@@ -29,61 +32,69 @@ const projects: Project[] = [
     description:
       "A mobile-friendly, installable PWA I built and deployed to make planning and navigating a hiking trip with friends easier. A fast trail finder for two base regions — Ortisei / Val Gardena (Dolomites) and Kranjska Gora (Julian Alps · Triglav National Park) — with trails drawn on an interactive OpenStreetMap, colour-coded by difficulty, plus search, filtering and a card per trail showing distance from your base, peak height, length, ascent and walking time. Installs to your home screen and works offline.",
     tags: ["Astro", "Leaflet", "Cloudflare Workers", "D1 / SQLite", "PWA", "OpenStreetMap"],
+    kind: "PWA",
   },
 ];
 ---
 
-<section class="mb-16">
-  <h2 class="text-2xl sm:text-3xl font-bold mb-8 border-b border-green-500 pb-2">Featured Projects</h2>
-  <div class="flex flex-col gap-4">
+<section class="mx-auto max-w-[1200px] px-5 pt-10 sm:px-8">
+  <SectionHeading num="01" title="Featured projects" />
+  <div class="flex flex-col gap-5">
     {
       projects.map((project, index) => (
-        <div class:list={[index === 0 ? "post-card" : "card", "p-5 sm:p-8"]}>
-          <h3 class="text-xl sm:text-2xl font-semibold mb-3 break-words">
-            <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
-              {project.title}
-            </a>
-          </h3>
-          <p class="mb-5 text-[0.95rem] leading-relaxed text-gray-300">{project.description}</p>
-          <div class="flex flex-wrap gap-2 mb-6">
-            {project.tags.map((tag) => (
-              <span class="px-2 py-0.5 rounded-md bg-green-500/10 border border-green-500/20 text-green-300 text-[11px] font-medium">
-                {tag}
-              </span>
-            ))}
-          </div>
-          <div class="flex items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <a
-                href={project.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open the live app"
-                title="Open the live app"
-                class="text-green-500 hover:text-green-400 transition-colors"
-              >
-                <Globe size={24} />
-              </a>
-              {project.repoUrl && (
-                <a
-                  href={project.repoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="View source on GitHub"
-                  title="View source on GitHub"
-                  class="text-green-500 hover:text-green-400 transition-colors"
-                >
-                  <GithubLogo size={24} />
-                </a>
-              )}
-            </div>
+        <article class:list={["panel", index === 0 ? "panel-ghost brackets" : "panel-solid", "px-6 py-7 sm:px-9 sm:py-8"]}>
+          <div class="mb-3 flex justify-between gap-4 text-xs tracking-[0.12em] text-[var(--text-muted)]">
+            <span>
+              SPECIMEN {String(index + 1).padStart(2, "0")} · {project.kind}
+            </span>
             {project.date && (
-              <span class="text-xs text-gray-500">
+              <span class="uppercase">
                 <FormattedDate date={project.date} />
               </span>
             )}
           </div>
-        </div>
+          <h3 class="mb-3 font-display text-[24px] font-semibold leading-tight sm:text-[28px]">
+            <a
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class:list={[
+                "no-underline hover:underline",
+                index === 0 ? "text-[var(--accent)]" : "text-[var(--text-strong)] hover:text-[var(--accent-soft)]",
+              ]}
+            >
+              {project.title}
+            </a>
+          </h3>
+          <p class="mb-5 max-w-[880px] text-[#b8c4ce]">{project.description}</p>
+          <div class="mb-5 flex flex-wrap gap-2">
+            {project.tags.map((tag) => (
+              <span class:list={["tag", index === 0 && "tag-accent"]}>{tag}</span>
+            ))}
+          </div>
+          <div class="flex flex-wrap gap-6 text-sm">
+            <a
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex min-h-11 items-center gap-2 text-[var(--accent)] no-underline hover:text-[var(--accent-soft)]"
+            >
+              <Globe size={18} />
+              open live app
+            </a>
+            {project.repoUrl && (
+              <a
+                href={project.repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex min-h-11 items-center gap-2 text-[var(--accent)] no-underline hover:text-[var(--accent-soft)]"
+              >
+                <GithubLogo size={18} />
+                view source
+              </a>
+            )}
+          </div>
+        </article>
       ))
     }
   </div>

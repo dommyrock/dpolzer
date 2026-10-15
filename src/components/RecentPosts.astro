@@ -1,10 +1,11 @@
 ---
+import { getCollection } from "astro:content";
 import FormattedDate from "./FormattedDate.astro";
-import { Certificate } from "@phosphor-icons/react";
+import SectionHeading from "./SectionHeading.astro";
 
-let posts = [
+// Newest first; the home page lists the first SHOWN of them.
+const posts = [
   {
-    id: 0,
     title: "Why Cargo kept building our test binaries twice, and how a workspace-hack fixed it",
     summary:
       "Cargo unifies features per command, so switching -p selections rebuilt our test binaries. How we measured it, fixed it with cargo-hakari, and halved the test binaries with line-tables-only debug info.",
@@ -13,18 +14,14 @@ let posts = [
     date: new Date("2026-10-15"),
   },
   {
-    id: 0,
     title: "MIT Applied AI & Data Science Associate Program — Curriculum Completion",
     summary:
       "Finished MIT's six-month Applied AI & Data Science associate program (Aug 2025 – Mar 2026). My deep-learning capstone detects malaria from red blood cell images with a custom CNN at 97% accuracy — built hands-on with Keras, TensorFlow and EDA.",
     slug: "mit-applied-ai-certificate",
     tags: ["Deep Learning", "ML", "EDA", "TensorFlow", "Keras", "CNN", "MIT"],
     date: new Date("2026-03"),
-    certUrl:
-      "https://credentials.professional.mit.edu/02bb6f4e-712f-4c45-b361-6a9e40ce03be#acc.trT3JNAj",
   },
   {
-    id: 0,
     title: "Auto image captioning with AI models",
     summary: "Exploration of AI image captioning workflows and models.",
     slug: "auto-image-captioning-ai",
@@ -32,7 +29,6 @@ let posts = [
     date: new Date("2024-11"),
   },
   {
-    id: 0,
     title: "Blocking Rule engine",
     summary:
       "How I built a blocking rule engine to prevent system abuse on a high-traffic GraphQL server running production shift-booking workloads in the US medical domain.",
@@ -41,7 +37,6 @@ let posts = [
     date: new Date("2024-10-12"),
   },
   {
-    id: 0,
     title: "AI Generating Site UI's",
     summary: "AI Generating Site UI's",
     slug: "ai-gen-site-ui",
@@ -49,7 +44,6 @@ let posts = [
     date: new Date("2024-10"),
   },
   {
-    id: 0,
     title: "Rust static & dynamic dispatch design patterns",
     summary: "Exploration and example usage of Rust static & dynamic dispatch design patterns.",
     slug: "rust-static-dyn-dispatch",
@@ -57,7 +51,6 @@ let posts = [
     date: new Date("2024-10"),
   },
   {
-    id: 0,
     title: "250 project Monolith repository build metrics",
     summary:
       "Measuring 250 project Monolith repository build metrics and ploting the results with python scripts.",
@@ -66,7 +59,6 @@ let posts = [
     date: new Date("2024-05"),
   },
   {
-    id: 0,
     title: "RAG pipelines and quantization intro",
     summary: "Talk I held Live at Endava RAG pipelines and common optimization tehniques.",
     slug: "rag-conf-talk-endava",
@@ -74,7 +66,6 @@ let posts = [
     date: new Date("2024-04"),
   },
   {
-    id: 0,
     title: "Optimizing data heavy GQL search endpoints in Production",
     summary:
       "Talk I held Live at Endava that went over the challenges when developing high traffic GQL Server.",
@@ -83,7 +74,6 @@ let posts = [
     date: new Date("2023-07"),
   },
   {
-    id: 0,
     title: "Directory relationship GUI project in Rust",
     summary: "Rust based Directory relationship linker GUI project",
     slug: "relationship-linker-rust",
@@ -91,7 +81,6 @@ let posts = [
     date: new Date("2022-12"),
   },
   {
-    id: 0,
     title: "Rate limiting API's in the Cloud",
     summary:
       "Blog post about Rate limiting API's in the Cloud, setting up paid subscription based routes and caching preflight requests.",
@@ -100,7 +89,6 @@ let posts = [
     date: new Date("2022-06"),
   },
   {
-    id: 0,
     title: "Generating static sites from text files - Go Hackathon",
     summary:
       "Google Hackathon project that i made and ended up in top 23 contestants among more than 1000 participants.",
@@ -109,7 +97,6 @@ let posts = [
     date: new Date("2022-03"),
   },
   {
-    id: 0,
     title: "Personal project CMS site (google sheets as backend)",
     summary: "Older personal site that showcased my personal projects",
     slug: "old-personal-site",
@@ -118,54 +105,32 @@ let posts = [
   },
 ];
 
-// Generate IDs in descending order
-posts = posts.map((post, index, arr) => ({
-  ...post,
-  id: arr.length - index,
-}));
+const SHOWN = 8;
+const total = (await getCollection("blog")).length;
 ---
 
-<section id="posts" class="scroll-mt-6">
-  <h2 class="text-2xl sm:text-3xl font-bold mb-8 border-b border-green-500 pb-2">Recent Posts</h2>
-  {/* Narrower than the featured projects: post summaries are short. */}
-  <div class="mx-auto flex w-full flex-col gap-4 lg:w-[70%]">
-    {
-      posts.map((post) => (
-        <div class="card p-5 sm:p-6">
-          <div class="flex items-start justify-between gap-3 sm:gap-4 mb-2">
-            <h3 class="text-lg sm:text-xl font-semibold break-words">
-              <a href={`/blog/${post.slug}`} class="hover:underline">
-                {post.title}
-              </a>
-            </h3>
-            {post.certUrl && (
-              <a
-                href={post.certUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View MIT credential"
-                title="View MIT credential"
-                class="text-red-400 hover:text-red-300 transition-colors shrink-0"
-              >
-                <Certificate size={26} />
-              </a>
-            )}
-          </div>
-          <p class="mb-4 text-[0.95rem] leading-relaxed text-gray-300">{post.summary}</p>
-          <div class="flex flex-wrap items-end justify-between gap-3">
-            <div class="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <span class="px-2 py-0.5 rounded-md bg-green-500/10 border border-green-500/20 text-green-300 text-[11px] font-medium">
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <span class="text-xs text-gray-500">
+<section id="posts" class="mx-auto max-w-[1200px] scroll-mt-6 px-5 pb-24 pt-[72px] sm:px-8">
+  <SectionHeading num="02" title="Recent posts" />
+  <div class="log mx-auto max-w-[880px]">
+    <div>
+      {
+        posts.slice(0, SHOWN).map((post) => (
+          <a class="log-row" href={`/blog/${post.slug}/`}>
+            <span class="log-date">
               <FormattedDate date={post.date} />
             </span>
-          </div>
-        </div>
-      ))
-    }
+            <span class="log-title">{post.title}</span>
+            <span class="flex flex-wrap gap-1.5">
+              {post.tags.slice(0, 3).map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </span>
+          </a>
+        ))
+      }
+    </div>
+    <a class="log-more text-[var(--accent)] hover:text-[var(--accent-soft)]" href="/blog/">
+      $ ls ./posts — all {total} posts →
+    </a>
   </div>
 </section>

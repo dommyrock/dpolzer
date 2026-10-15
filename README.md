@@ -9,10 +9,12 @@ My personal site and blog: work experience, featured projects and posts. A fully
 │   └── _headers             # Cloudflare Pages headers (1-year cache for /fonts/*)
 ├── src/
 │   ├── components/
-│   │   ├── Home.astro       # home page: hero, featured projects, recent posts
+│   │   ├── Home.astro       # home page: helix background, hero, projects, posts
+│   │   ├── Helix.astro      # the dot helix behind the home page, and the hero link's underline
 │   │   ├── FeaturedProject.astro  # the featured projects list
 │   │   ├── RecentPosts.astro      # the posts listed on the home page
-│   │   └── ...              # header, footer, hero, particles, head tags
+│   │   ├── SectionHeading.astro   # numbered section titles ("01  Featured projects")
+│   │   └── ...              # header, footer, hero, head tags
 │   ├── content/blog/        # one Markdown file per post
 │   ├── content.config.ts    # frontmatter schema of the posts
 │   ├── layouts/BlogPost.astro     # page layout of a post and of /about
@@ -22,7 +24,7 @@ My personal site and blog: work experience, featured projects and posts. A fully
 │   │   ├── blog/index.astro # /blog, every post
 │   │   ├── blog/[...slug].astro   # /blog/<slug>
 │   │   └── rss.xml.js       # /rss.xml
-│   ├── styles/global.css
+│   ├── styles/global.css    # palette, fonts, panels, tags and post log rows shared by every page
 │   └── consts.ts            # site title and description
 ├── astro.config.mjs         # site URL, MDX, sitemap, React, Tailwind
 └── .nvmrc                   # Node 22.12.0

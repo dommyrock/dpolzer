@@ -25,14 +25,14 @@ import Layout from "../layouts/BlogPost.astro";
 
     <strong>Professional Experience</strong>
     <br />
-    <p class="text-[#22c55e] mb-0">Short version</p>
+    <p class="mb-0 font-display text-lg font-semibold text-[var(--accent)]">Short version</p>
     Over roughly 10 years of professional experience, I've worked with a wide range of technologies and tools, including
     C#, Rust, SQL, JavaScript, PowerShell, Bash, Python, Go, and all the major cloud platforms. Along the
     way I gained experience in distributed systems, multithreaded systems, large codebases, data processing,
     search systems, and high-traffic GraphQL servers.
     <br /><br />
 
-    <p class="text-[#22c55e] mb-0">Longer version / Career Timeline</p>
+    <p class="mb-0 font-display text-lg font-semibold text-[var(--accent)]">Longer version / Career Timeline</p>
     <ul>
       <li>
         <strong>Exein — Software Engineer, Distributed Systems (Apr 2025 – Present):</strong>
@@ -40,9 +40,9 @@ import Layout from "../layouts/BlogPost.astro";
         core backend team, scaling the high-availability systems behind continuous firmware vulnerability
         scanning and analysis.
         <br />
-        <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Highlights</span>
-          <ul>
+        <div class="panel panel-solid my-3 px-5 py-4">
+          <span class="font-mono text-xs uppercase tracking-[0.12em] text-[var(--teal)]">Highlights</span>
+          <ul class="mt-2 list-none pl-0">
             <li class="ml-4">
               - Architected and built Exein's Vulnerability Tracker from the ground up — a greenfield
               Rust microservice (hexagonal architecture, Axum + SQLx/Postgres) for continuous firmware
@@ -114,9 +114,9 @@ import Layout from "../layouts/BlogPost.astro";
         layers — and optimized data-heavy GraphQL search resolvers down to under 500ms, while querying
         across millions of records on a 5 TB+ dataset.
         <br />
-        <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Key learnings</span>
-          <ul>
+        <div class="panel panel-solid my-3 px-5 py-4">
+          <span class="font-mono text-xs uppercase tracking-[0.12em] text-[var(--teal)]">Key learnings</span>
+          <ul class="mt-2 list-none pl-0">
             <li class="ml-4">- Working with 5M+ lines-of-code codebases.</li>
             <li class="ml-4">- High-traffic GraphQL server library and query development.</li>
             <li class="ml-4">
@@ -145,9 +145,9 @@ import Layout from "../layouts/BlogPost.astro";
         and Postgres. I really enjoyed Rust as a language, coming from a previous C# project that had a
         custom Maybe implementation, and a bit of F#.
         <br />
-        <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Key learnings</span>
-          <ul>
+        <div class="panel panel-solid my-3 px-5 py-4">
+          <span class="font-mono text-xs uppercase tracking-[0.12em] text-[var(--teal)]">Key learnings</span>
+          <ul class="mt-2 list-none pl-0">
             <li class="ml-4">
               - How to work with async runtimes and frameworks like Tokio, Actix and Axum.
             </li>
@@ -175,9 +175,9 @@ import Layout from "../layouts/BlogPost.astro";
         a distributed blacklisting/whitelisting service for syncing potential B2B actors across the HT
         group companies.
         <br />
-        <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Key learnings</span>
-          <ul>
+        <div class="panel panel-solid my-3 px-5 py-4">
+          <span class="font-mono text-xs uppercase tracking-[0.12em] text-[var(--teal)]">Key learnings</span>
+          <ul class="mt-2 list-none pl-0">
             <li class="ml-4">- How to architect full-stack file-sharing (Google Drive–like) systems</li>
             <li class="ml-4">- How to develop distributed blacklisting/whitelisting services</li>
             <li class="ml-4">
@@ -198,9 +198,9 @@ import Layout from "../layouts/BlogPost.astro";
         sites. I had the opportunity to learn about write-heavy Cassandra clusters, BigQuery, SQL, key
         web metrics, and efficient web scrapers.
         <br />
-        <div class="border border-gray-300 p-4 rounded-md">
-          <span class="font-medium text-slate-200">Key learnings</span>
-          <ul>
+        <div class="panel panel-solid my-3 px-5 py-4">
+          <span class="font-mono text-xs uppercase tracking-[0.12em] text-[var(--teal)]">Key learnings</span>
+          <ul class="mt-2 list-none pl-0">
             <li class="ml-4">- How to write efficient web scrapers</li>
             <li class="ml-4">- How to handle large (write-heavy) Cassandra clusters</li>
             <li class="ml-4">- How to process and store large amounts of data</li>

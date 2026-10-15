@@ -1,32 +1,47 @@
 ---
-import HeaderLink from "./HeaderLink.astro";
 import { LinkedinLogo, GithubLogo, Terminal, XLogo } from "@phosphor-icons/react";
+
+const onAbout = Astro.url.pathname.replace(/\/$/, "") === "/about";
+const socials = [
+  { href: "https://github.com/dommyrock", label: "GitHub", Icon: GithubLogo },
+  { href: "https://linkedin.com/in/dominik-polzer-hi-o/", label: "LinkedIn", Icon: LinkedinLogo },
+  { href: "https://x.com/dompolzer", label: "X", Icon: XLogo },
+];
 ---
 
-<header
-  class="rule-bottom flex flex-col gap-2 print:hidden text-green-500 font-mono bg-dommy-black"
->
-  <h2 class="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-base sm:text-xl pt-3">
-    <Terminal size={32} />
-    <HeaderLink href="/">
-      <span class="text-crimson-9">~/</span>dominik.polzer
-    </HeaderLink>
-    <HeaderLink
-      href="/about"
-      class="bg-green-500 px-3 py-1 text-sm font-semibold text-black no-underline transition-colors hover:bg-green-400 sm:text-base"
+<header class="relative z-20 border-b border-[var(--border-soft)] bg-[rgba(11,13,16,0.9)] font-mono print:hidden">
+  <div class="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 py-2.5 sm:px-8">
+    <a
+      href="/"
+      class="flex min-h-11 items-center gap-2.5 text-base font-bold text-[var(--accent)] no-underline hover:text-[var(--accent-soft)]"
     >
-      cd ./about
-    </HeaderLink>
-  </h2>
-  <div class="mb-4 flex w-full justify-center gap-4">
-    <HeaderLink href="https://github.com/dommyrock" target="_blank">
-      <GithubLogo size={24} />
-    </HeaderLink>
-    <HeaderLink href="https://linkedin.com/in/dominik-polzer-hi-o/" target="_blank">
-      <LinkedinLogo size={24} />
-    </HeaderLink>
-    <HeaderLink href="https://x.com/dompolzer" target="_blank">
-      <XLogo size={24} />
-    </HeaderLink>
+      <Terminal size={22} />
+      <span><span class="text-[var(--text-muted)]">~/</span>dominik.polzer</span>
+    </a>
+    <nav aria-label="Main" class="flex items-center gap-1.5">
+      <a
+        href="/about"
+        aria-current={onAbout ? "page" : undefined}
+        class:list={[
+          "mr-2.5 inline-flex min-h-9 items-center px-3.5 text-[13px] font-bold text-[#04150a] no-underline transition-colors hover:bg-[var(--accent-soft)] hover:text-[#04150a]",
+          onAbout ? "bg-[var(--accent-soft)]" : "bg-[var(--accent)]",
+        ]}
+      >
+        cd ./about
+      </a>
+      {
+        socials.map(({ href, label, Icon }) => (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={label}
+            class="inline-flex h-11 w-11 items-center justify-center text-[var(--text)] transition-colors hover:text-[var(--accent)]"
+          >
+            <Icon size={20} />
+          </a>
+        ))
+      }
+    </nav>
   </div>
 </header>

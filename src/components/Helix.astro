@@ -1,0 +1,285 @@
+---
+// A DNA double helix behind the whole home page, drawn the way the old hero
+// globe was: thousands of faint grey dots with perspective depth, pushed away
+// from the cursor with a slight swirl, brightening and linking up near it.
+// The helix runs down the middle of the parent element (Home.astro). The
+// canvas is fixed to the viewport and drawn with the scroll offset, so it stays
+// viewport-sized however long the page is.
+//
+// It also draws the dotted underline of the element marked
+// `data-helix-underline` (the hero's `$ cd posts`) on hover and focus.
+---
+
+<canvas id="helix" aria-hidden="true" class="pointer-events-none fixed inset-0 z-0 block h-full w-full"></canvas>
+
+<script>
+  const canvas = document.getElementById("helix") as HTMLCanvasElement | null;
+  const ctx = canvas?.getContext("2d");
+  const root = canvas?.parentElement;
+
+  if (canvas && ctx && root) {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const coarsePointer = window.matchMedia("(hover: none), (pointer: coarse)").matches;
+
+    const COLOR = [222, 228, 234]; // the globe's white-ish grey
+    const ACCENT = [74, 222, 128]; // --accent
+    const RW = 70; // helix radius in world units
+    const TUBE = 7; // spread of a strand's dots around its centre line
+    const Z_OFFSET = 320;
+    const DEPTH_DEN = 445;
+    const PITCH = 560; // page px per full turn
+    const RUNG_EVERY = 28; // page px between base pairs
+    const ROT_SPEED = 0.35; // rad/s
+    const FORCE_RADIUS = 140;
+    const HOVER_RADIUS = 65;
+    const LINK_RADIUS = 40;
+    const MAX_OFFSET = 28;
+
+    // seeded RNG so the helix looks the same on every load
+    let seed = 1337;
+    const rand = () => {
+      let t = (seed += 1831565813);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+    const smooth = (v: number) => v * v * (3 - 2 * v);
+    const gauss = () => (rand() + rand() + rand() - 1.5) / 1.5;
+    const rgba = (c: number[], a: number) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
+
+    type Dot = {
+      x: number; y: number; z: number; size: number; rung: boolean;
+      sx: number; vy: number; depth: number; hover: number;
+      ox: number; oy: number; vx: number; vyv: number; on: boolean;
+    };
+    type Speck = { x: number; y: number; r: number; a: number; v: number };
+
+    let vw = 0;
+    let vh = 0;
+    let pageH = 0;
+    let rootTop = 0;
+    let fov = 800;
+    let dots: Dot[] = [];
+    let specks: Speck[] = [];
+
+    const dot = (x: number, y: number, z: number, size: number, rung: boolean): Dot => ({
+      x, y, z, size, rung, sx: 0, vy: 0, depth: 0, hover: 0, ox: 0, oy: 0, vx: 0, vyv: 0, on: false,
+    });
+
+    // Dots are placed in page coordinates (y from the top of the parent).
+    const build = () => {
+      seed = 1337;
+      dots = [];
+      const twist = (Math.PI * 2) / PITCH;
+      for (let y = -40; y < pageH + 40; y += 0.9) {
+        for (let s = 0; s < 2; s++) {
+          const a = y * twist + s * Math.PI;
+          const size = 0.4 + rand() * rand() * 3;
+          dots.push(dot(RW * Math.cos(a) + gauss() * TUBE, y, RW * Math.sin(a) + gauss() * TUBE, size, false));
+        }
+      }
+      for (let y = 0; y < pageH; y += RUNG_EVERY) {
+        const a = y * twist;
+        const x0 = RW * Math.cos(a);
+        const z0 = RW * Math.sin(a);
+        for (let k = 0; k < 14; k++) {
+          const t = 0.08 + (k / 13) * 0.84;
+          const size = 0.35 + rand() * 1.4;
+          dots.push(dot(x0 - 2 * x0 * t + gauss() * 1.5, y + gauss() * 1.5, z0 - 2 * z0 * t + gauss() * 1.5, size, true));
+        }
+      }
+      specks = [];
+      const count = Math.round((vw * pageH) / 9000);
+      for (let i = 0; i < count; i++) {
+        specks.push({ x: rand() * vw, y: rand() * pageH, r: 0.4 + rand() * 1.2, a: 0.15 + rand() * 0.35, v: 2 + rand() * 6 });
+      }
+    };
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      vw = canvas.clientWidth;
+      vh = canvas.clientHeight;
+      if (vw < 1 || vh < 1) return;
+      canvas.width = Math.round(vw * dpr);
+      canvas.height = Math.round(vh * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const r = root.getBoundingClientRect();
+      rootTop = r.top + window.scrollY;
+      // screen radius grows with the viewport, 70 to 190 px
+      fov = (Math.min(Math.max(vw * 0.14, 70), 190) * Z_OFFSET) / RW;
+      if (Math.abs(r.height - pageH) > 40 || dots.length === 0) {
+        pageH = r.height;
+        build();
+      }
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    new ResizeObserver(resize).observe(root);
+
+    let mx: number | null = null;
+    let my: number | null = null;
+    const clearPointer = () => (mx = my = null);
+    if (!coarsePointer) {
+      window.addEventListener(
+        "pointermove",
+        (e) => {
+          mx = e.clientX;
+          my = e.clientY;
+        },
+        { passive: true },
+      );
+      document.documentElement.addEventListener("pointerleave", clearPointer);
+      window.addEventListener("blur", clearPointer);
+    }
+
+    // `$ cd posts`: dots fly in and settle into a three-row underline, left to
+    // right; leaving scatters them again.
+    const underlineLink = document.querySelector<HTMLElement>("[data-helix-underline]");
+    const underlineText = underlineLink?.querySelector<HTMLElement>("[data-helix-underline-text]") ?? null;
+    let underlineOn = false;
+    if (underlineLink) {
+      const on = () => (underlineOn = true);
+      const off = () => (underlineOn = false);
+      underlineLink.addEventListener("mouseenter", on);
+      underlineLink.addEventListener("mouseleave", off);
+      underlineLink.addEventListener("focus", on);
+      underlineLink.addEventListener("blur", off);
+    }
+    const ul = {
+      p: 0,
+      dots: Array.from({ length: 66 }, (_, i) => ({
+        t: (i % 22) / 21,
+        row: Math.floor(i / 22),
+        sx: rand() * 2 - 1,
+        sy: rand() * 2 - 1,
+        size: 0.9 + rand() * 1.5,
+        delay: ((i % 22) / 22) * 0.4 + rand() * 0.06,
+        ph: rand() * Math.PI * 2,
+      })),
+    };
+    const drawUnderline = (dt: number, now: number) => {
+      ul.p += ((underlineOn ? 1 : 0) - ul.p) * Math.min(1, dt * 6);
+      if (ul.p < 0.01 || !underlineText) return;
+      const r = underlineText.getBoundingClientRect();
+      const y = r.bottom + 7;
+      ctx.shadowColor = rgba(ACCENT, 0.95);
+      for (const d of ul.dots) {
+        const k = smooth(clamp01((ul.p - d.delay) / 0.55));
+        if (k <= 0) continue;
+        const wobble = reducedMotion ? 0 : Math.sin(now / 240 + d.ph) * 0.9;
+        const x = r.left + r.width * d.t + d.sx * 46 * (1 - k);
+        const yy = y + (d.row - 1) * 2.6 + d.sy * 30 * (1 - k) + wobble * k;
+        ctx.shadowBlur = 10 * k;
+        ctx.fillStyle = rgba(ACCENT, 0.95 * k);
+        ctx.beginPath();
+        ctx.arc(x, yy, d.size * (0.55 + 0.45 * k), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    };
+
+    let angle = 0;
+    let last = performance.now();
+
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const offset = rootTop - window.scrollY; // page y -> viewport y
+      const cx = vw / 2;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      ctx.clearRect(0, 0, vw, vh);
+
+      for (const s of specks) {
+        if (!reducedMotion) {
+          s.y -= s.v * dt;
+          if (s.y < -4) {
+            s.y = pageH + 4;
+            s.x = rand() * vw;
+          }
+        }
+        const y = s.y + offset;
+        if (y < -4 || y > vh + 4) continue;
+        ctx.fillStyle = rgba(COLOR, s.a * 0.5);
+        ctx.beginPath();
+        ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const hovered: Dot[] = [];
+      for (const p of dots) {
+        p.hover = 0;
+        p.vy = p.y + offset;
+        p.on = p.vy > -MAX_OFFSET - 10 && p.vy < vh + MAX_OFFSET + 10;
+        if (!p.on) continue;
+        const rx = p.x * cos - p.z * sin;
+        const rz = p.x * sin + p.z * cos;
+        const zc = rz + Z_OFFSET;
+        p.sx = cx + rx * (fov / zc);
+        p.depth = 1 - clamp01(zc / DEPTH_DEN);
+
+        // push away from the cursor with a slight tangential swirl
+        let tx = 0;
+        let ty = 0;
+        if (mx != null && my != null) {
+          const dx = p.sx - mx;
+          const dy = p.vy - my;
+          const d = Math.sqrt(dx * dx + dy * dy) || 1;
+          if (d < HOVER_RADIUS) {
+            p.hover = smooth(1 - d / HOVER_RADIUS);
+            hovered.push(p);
+          }
+          if (d < FORCE_RADIUS) {
+            const s = smooth(1 - d / FORCE_RADIUS);
+            const f = 30 * s * (0.35 + 0.65 * p.depth);
+            const nx = dx / d;
+            const ny = dy / d;
+            tx = nx * f - ny * f * 0.25;
+            ty = ny * f + nx * f * 0.25;
+          }
+        }
+        p.vx = (p.vx + (tx - p.ox) * 0.1) * 0.2;
+        p.vyv = (p.vyv + (ty - p.oy) * 0.1) * 0.2;
+        p.ox = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, p.ox + p.vx));
+        p.oy = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, p.oy + p.vyv));
+      }
+
+      // link hovered dots that are close to each other
+      ctx.lineWidth = 0.6;
+      for (let i = 0; i < hovered.length; i++) {
+        const a = hovered[i];
+        for (let j = i + 1; j < hovered.length; j++) {
+          const b = hovered[j];
+          const dx = a.sx + a.ox - (b.sx + b.ox);
+          const dy = a.vy + a.oy - (b.vy + b.oy);
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d > LINK_RADIUS) continue;
+          ctx.strokeStyle = rgba(ACCENT, 0.5 * (1 - d / LINK_RADIUS) * Math.min(a.hover, b.hover));
+          ctx.beginPath();
+          ctx.moveTo(a.sx + a.ox, a.vy + a.oy);
+          ctx.lineTo(b.sx + b.ox, b.vy + b.oy);
+          ctx.stroke();
+        }
+      }
+
+      for (const p of dots) {
+        if (!p.on) continue;
+        const fade = 1 - 0.45 * clamp01(p.y / Math.max(1, pageH));
+        const alpha = clamp01((0.05 + 0.2 * p.depth) * (p.rung ? 0.75 : 1) * fade + p.hover * 0.35);
+        const radius = Math.max(0.5, 1.05 * (0.9 + p.depth)) * p.size * (1 + p.hover * 0.2);
+        // hovered dots tint toward the accent
+        const c = p.hover > 0 ? [0, 1, 2].map((i) => Math.round(COLOR[i] + (ACCENT[i] - COLOR[i]) * p.hover)) : COLOR;
+        ctx.fillStyle = rgba(c, alpha);
+        ctx.beginPath();
+        ctx.arc(p.sx + p.ox, p.vy + p.oy, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawUnderline(dt, now);
+      if (!reducedMotion) angle += ROT_SPEED * dt;
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+</script>
