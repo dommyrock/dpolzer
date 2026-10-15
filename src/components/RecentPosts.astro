@@ -5,6 +5,15 @@ import { Certificate } from "@phosphor-icons/react";
 let posts = [
   {
     id: 0,
+    title: "Why Cargo kept building our test binaries twice, and how a workspace-hack fixed it",
+    summary:
+      "Cargo unifies features per command, so switching -p selections rebuilt our test binaries. How we measured it, fixed it with cargo-hakari, and halved the test binaries with line-tables-only debug info.",
+    slug: "cargo-workspace-rebuilds",
+    tags: ["Rust", "Cargo", "cargo-hakari", "Build Performance", "CI"],
+    date: new Date("2026-10-15"),
+  },
+  {
+    id: 0,
     title: "MIT Applied AI & Data Science Associate Program — Curriculum Completion",
     summary:
       "Finished MIT's six-month Applied AI & Data Science associate program (Aug 2025 – Mar 2026). My deep-learning capstone detects malaria from red blood cell images with a custom CNN at 97% accuracy — built hands-on with Keras, TensorFlow and EDA.",
