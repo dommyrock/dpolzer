@@ -47,6 +47,11 @@
 html {
 	background-color: var(--bg);
 }
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
 
 /* Card with a border-only gradient ring: light grey on the left edge, fading
    into the site green just past the corner curve; interior stays transparent.
