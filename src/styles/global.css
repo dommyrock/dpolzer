@@ -144,14 +144,6 @@ hr {
 
 /* ---- Shared pieces of the site's look ---- */
 
-/* Faint technical grid behind page title bands. */
-.grid-band {
-	background-image:
-		linear-gradient(rgba(74, 222, 128, 0.05) 1px, transparent 1px),
-		linear-gradient(90deg, rgba(74, 222, 128, 0.05) 1px, transparent 1px);
-	background-size: 44px 44px;
-}
-
 /* Panels: a solid one, and a see-through one with accent corner brackets.
    The border turns green on hover, without motion. */
 .panel {

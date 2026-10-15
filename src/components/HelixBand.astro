@@ -1,0 +1,125 @@
+---
+// A faint horizontal DNA helix of dots behind a page's title band, in the
+// style of the home page's helix (Helix.astro), with drifting specks and one
+// green cluster where the dots link up, as they do near the cursor there.
+// Static SVG built at build time; `seed` (the page path) varies the phase,
+// pitch and the green cluster from page to page.
+interface Props {
+  seed: string;
+}
+
+const { seed } = Astro.props;
+
+// FNV-1a hash of the seed, then mulberry32
+let state = 2166136261;
+for (const ch of seed) {
+  state ^= ch.charCodeAt(0);
+  state = Math.imul(state, 16777619);
+}
+state >>>= 0;
+const rand = () => {
+  let t = (state += 0x6d2b79f5);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
+const W = 1440;
+const H = 300;
+const GREY = [222, 228, 234];
+const GREEN = [74, 222, 128];
+const cy = H * (0.52 + rand() * 0.16);
+const amp = 44 + rand() * 18;
+const pitch = 380 + rand() * 120;
+const phase = rand() * Math.PI * 2;
+const spotX = W * (0.6 + rand() * 0.3);
+const SPOT_R = 70;
+
+const near = (x: number, y: number) => Math.max(0, 1 - Math.hypot(x - spotX, y - cy) / SPOT_R);
+const round = (v: number) => Math.round(v * 10) / 10;
+const tint = (g: number) =>
+  `rgb(${GREY.map((c, i) => Math.round(c + (GREEN[i] - c) * g)).join(",")})`;
+
+type Dot = { x: number; y: number; r: number; a: number; g: number };
+const dots: Dot[] = [];
+
+// two strands, dimmer and smaller where they turn away
+for (let x = -10; x <= W + 10; x += 9) {
+  for (const offset of [0, Math.PI]) {
+    const t = (x / pitch) * Math.PI * 2 + phase + offset;
+    const depth = (Math.cos(t) + 1) / 2;
+    const count = rand() < 0.3 ? 2 : 1;
+    for (let k = 0; k < count; k++) {
+      const dx = x + (rand() - 0.5) * 6;
+      const dy = cy + amp * Math.sin(t) + (rand() - 0.5) * 7;
+      dots.push({ x: dx, y: dy, r: (0.5 + rand() * rand() * 2.2) * (0.8 + 0.5 * depth), a: 0.08 + 0.3 * depth, g: near(dx, dy) });
+    }
+  }
+}
+// base pairs between the strands
+for (let x = 0; x <= W; x += 36) {
+  const t = (x / pitch) * Math.PI * 2 + phase;
+  const y0 = cy + amp * Math.sin(t);
+  const y1 = cy - amp * Math.sin(t);
+  for (let k = 1; k < 7; k++) {
+    const y = y0 + ((y1 - y0) * k) / 7 + (rand() - 0.5) * 2;
+    const dx = x + (rand() - 0.5) * 2;
+    dots.push({ x: dx, y, r: 0.4 + rand() * 0.9, a: 0.06 + rand() * 0.06, g: near(dx, y) });
+  }
+}
+
+const specks = Array.from({ length: 45 }, () => ({
+  x: rand() * W,
+  y: rand() * H,
+  r: 0.4 + rand() * 1.1,
+  a: 0.08 + rand() * 0.16,
+}));
+
+// short links between the dots of the green cluster
+const cluster = dots.filter((d) => d.g > 0.2);
+const links: { x1: number; y1: number; x2: number; y2: number; a: number }[] = [];
+for (let i = 0; i < cluster.length && links.length < 60; i++) {
+  for (let j = i + 1; j < cluster.length && links.length < 60; j++) {
+    const a = cluster[i];
+    const b = cluster[j];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (d < 34) links.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y, a: 0.5 * (1 - d / 34) * Math.min(a.g, b.g) });
+  }
+}
+---
+
+<svg
+  aria-hidden="true"
+  class="helix-band pointer-events-none absolute inset-0 h-full w-full"
+  viewBox={`0 0 ${W} ${H}`}
+  preserveAspectRatio="xMidYMid slice"
+>
+  <g fill="rgb(222,228,234)">
+    {specks.map((s) => <circle cx={round(s.x)} cy={round(s.y)} r={round(s.r)} fill-opacity={Math.round(s.a * 100) / 100} />)}
+  </g>
+  <g stroke="rgb(74,222,128)" stroke-width="0.6">
+    {
+      links.map((l) => (
+        <line x1={round(l.x1)} y1={round(l.y1)} x2={round(l.x2)} y2={round(l.y2)} stroke-opacity={Math.round(l.a * 100) / 100} />
+      ))
+    }
+  </g>
+  <g fill="rgb(222,228,234)">
+    {
+      dots.map((d) =>
+        d.g > 0 ? (
+          <circle cx={round(d.x)} cy={round(d.y)} r={round(d.r * (1 + d.g * 0.3))} fill={tint(d.g)} fill-opacity={Math.round(Math.min(1, d.a + d.g * 0.4) * 100) / 100} />
+        ) : (
+          <circle cx={round(d.x)} cy={round(d.y)} r={round(d.r)} fill-opacity={Math.round(d.a * 100) / 100} />
+        ),
+      )
+    }
+  </g>
+</svg>
+
+<style>
+  .helix-band {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  }
+</style>

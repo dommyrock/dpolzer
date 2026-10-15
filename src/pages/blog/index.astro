@@ -5,6 +5,7 @@ import { getCollection } from "astro:content";
 import FormattedDate from "../../components/FormattedDate.astro";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
+import HelixBand from "../../components/HelixBand.astro";
 
 // Every post, newest first, as the home page's log rows plus each description.
 const posts = (await getCollection("blog")).sort(
@@ -19,8 +20,9 @@ const posts = (await getCollection("blog")).sort(
   </head>
   <body class="bg-dommy-black">
     <Header />
-    <section class="grid-band border-b border-[var(--border-soft)]">
-      <div class="mx-auto w-[880px] max-w-[calc(100%-2.5rem)] pb-10 pt-14 sm:pb-12 sm:pt-20">
+    <section class="relative overflow-hidden border-b border-[var(--border-soft)]">
+      <HelixBand seed="/blog" />
+      <div class="relative mx-auto w-[880px] max-w-[calc(100%-2.5rem)] pb-10 pt-14 sm:pb-12 sm:pt-20">
         <div class="mb-4 flex gap-4 font-mono text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
           <span class="normal-case tracking-normal text-[var(--teal)]">~/blog</span>
           <span>{posts.length} posts</span>

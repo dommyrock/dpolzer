@@ -4,6 +4,7 @@ import BaseHead from "../components/BaseHead.astro";
 import Footer from "../components/Footer.astro";
 import FormattedDate from "../components/FormattedDate.astro";
 import Header from "../components/Header.astro";
+import HelixBand from "../components/HelixBand.astro";
 
 type Props = CollectionEntry<"blog">["data"];
 
@@ -178,8 +179,9 @@ const location = "~" + Astro.url.pathname.replace(/\/$/, "");
 
   <body class="bg-dommy-black">
     <Header />
-    <section class="grid-band border-b border-[var(--border-soft)]">
-      <div class="mx-auto w-[760px] max-w-[calc(100%-2.5rem)] pb-10 pt-14 sm:pb-12 sm:pt-20">
+    <section class="relative overflow-hidden border-b border-[var(--border-soft)]">
+      <HelixBand seed={Astro.url.pathname} />
+      <div class="relative mx-auto w-[760px] max-w-[calc(100%-2.5rem)] pb-10 pt-14 sm:pb-12 sm:pt-20">
         <div class="mb-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
           <span class="normal-case tracking-normal text-[var(--teal)]">{location}</span>
           <FormattedDate date={pubDate} />
