@@ -6,6 +6,14 @@ import SectionHeading from "./SectionHeading.astro";
 // Newest first; the home page lists the first SHOWN of them.
 const posts = [
   {
+    title: "Galaxy 3D simulation: eight galaxies at their real scale",
+    summary:
+      "An interactive WebGL2 simulation of the Milky Way and seven famous galaxies, from Andromeda to the Cartwheel, with real shapes, scales and landmarks.",
+    slug: "galaxy-3d-simulation",
+    tags: ["WebGL2", "Astronomy", "Simulation", "Astro"],
+    date: new Date("2026-11-12"),
+  },
+  {
     title: "Why Cargo kept building our test binaries twice, and how a workspace-hack fixed it",
     summary:
       "Cargo unifies features per command, so switching -p selections rebuilt our test binaries. How we measured it, fixed it with cargo-hakari, and halved the test binaries with line-tables-only debug info.",

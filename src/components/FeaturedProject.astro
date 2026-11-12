@@ -1,5 +1,5 @@
 ---
-import { GithubLogo, Globe } from "@phosphor-icons/react";
+import { Article, GithubLogo, Globe } from "@phosphor-icons/react";
 import FormattedDate from "./FormattedDate.astro";
 import SectionHeading from "./SectionHeading.astro";
 
@@ -7,11 +7,15 @@ interface Project {
   title: string;
   liveUrl: string;
   repoUrl?: string; // omit for private repos
+  postUrl?: string; // a write-up on this site
   description: string;
   tags: string[];
   kind: string; // shown after the specimen number, e.g. LIVE
   date?: Date;
 }
+
+// Links to this site open in the same tab, everything else in a new one.
+const external = (url: string) => (/^https?:/.test(url) ? { target: "_blank", rel: "noopener noreferrer" } : {});
 
 // The first project sits in a see-through panel with corner brackets, the rest
 // in solid panels (.panel-ghost, .panel-solid in src/styles/global.css).
@@ -24,6 +28,16 @@ const projects: Project[] = [
     tags: ["AI Agents", "Macro Economics", "Finance", "Market Insights", "Investing"],
     kind: "LIVE",
     date: new Date("2026-07-16"),
+  },
+  {
+    title: "Galaxy 3D Simulation",
+    liveUrl: "/galaxy-3d/",
+    postUrl: "/blog/galaxy-3d-simulation/",
+    description:
+      "The Milky Way and seven famous galaxies — Andromeda, Triangulum, the Large Magellanic Cloud, the Whirlpool, the Sombrero, M87 and the Cartwheel — in one WebGL2 view, at their real relative scale. Shapes, distances and 84 landmarks come from published research; the other 5,000–10,000 objects per galaxy are generated in the browser, on demand, within the same frame budget.",
+    tags: ["WebGL2", "Astronomy", "Simulation", "Astro", "Performance"],
+    kind: "3D SIM",
+    date: new Date("2026-11-12"),
   },
   {
     title: "Alpine Trails — Hiking Trip Planner",
@@ -56,8 +70,7 @@ const projects: Project[] = [
           <h3 class="mb-3 font-display text-[24px] font-semibold leading-tight sm:text-[28px]">
             <a
               href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...external(project.liveUrl)}
               class:list={[
                 "no-underline hover:underline",
                 index === 0 ? "text-[var(--accent)]" : "text-[var(--text-strong)] hover:text-[var(--accent-soft)]",
@@ -75,13 +88,21 @@ const projects: Project[] = [
           <div class="flex flex-wrap gap-6 text-sm">
             <a
               href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...external(project.liveUrl)}
               class="inline-flex min-h-11 items-center gap-2 text-[var(--accent)] no-underline hover:text-[var(--accent-soft)]"
             >
               <Globe size={18} />
               open live app
             </a>
+            {project.postUrl && (
+              <a
+                href={project.postUrl}
+                class="inline-flex min-h-11 items-center gap-2 text-[var(--accent)] no-underline hover:text-[var(--accent-soft)]"
+              >
+                <Article size={18} />
+                read the write-up
+              </a>
+            )}
             {project.repoUrl && (
               <a
                 href={project.repoUrl}

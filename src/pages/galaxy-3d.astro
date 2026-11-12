@@ -1,0 +1,156 @@
+---
+// Galaxy 3D simulation: a full-screen WebGL2 app with its own look (src/galaxy/atlas.css),
+// so it skips BaseHead and the site's global.css on purpose. The engine and the Milky Way
+// ship in one bundle; every other galaxy is a separate chunk, loaded when its tab opens.
+import "../galaxy/atlas.css";
+import { SITE_TITLE } from "../consts";
+
+const title = `Galaxy 3D simulation | ${SITE_TITLE}`;
+const description =
+  "Eight galaxies in 3D, from the Milky Way to the Cartwheel, at their real relative scale. Shapes, distances and landmarks come from published research; the rest of the 5,000–10,000 objects per galaxy are generated in your browser.";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const image = new URL("/galaxy-3d-hero.png", Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={image} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Unbounded:wght@500;600&display=swap"
+    />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Interactive 3D map of the selected galaxy. Drag to orbit, scroll to zoom, click an object for details."></canvas>
+    <div id="labels" class="labels" aria-hidden="true"></div>
+    <div id="tip" class="tip glass" hidden></div>
+
+    <div class="ui">
+      <aside id="nav" class="nav glass" aria-label="Filters">
+        <header class="nav-head">
+          <a class="mark" href="/" aria-label="Back to dominik.polzer" title="Back to dominik.polzer">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M16 7.5c5.4 0 9 3.4 9 8.1 0 4-3.1 6.9-7 6.9"/>
+              <path d="M16 24.5c-5.4 0-9-3.4-9-8.1 0-4 3.1-6.9 7-6.9"/>
+              <circle cx="16" cy="16" r="2.2" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
+          <div class="brand">
+            <h1 id="brandName">Milky Way</h1>
+            <p id="brandSub">10,000 objects</p>
+          </div>
+          <button id="navClose" class="icon-btn" type="button" aria-label="Hide filters" title="Hide filters">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>
+          </button>
+        </header>
+        <div class="nav-body scroll">
+          <section class="facet gabout" aria-label="About this galaxy">
+            <p id="gblurb" class="gblurb"></p>
+            <dl id="gfacts" class="stats gfacts"></dl>
+          </section>
+          <label class="search" for="q">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="m10.5 10.5 3.4 3.4" stroke-linecap="round"/></svg>
+            <input id="q" type="search" placeholder="Search names, types, sources…" autocomplete="off" spellcheck="false">
+            <kbd>/</kbd>
+          </label>
+          <div class="suggest chips" id="suggest"></div>
+          <div class="summary">
+            <span><b id="matchN">10,000</b> of <span id="totalN">10,000</span> in focus</span>
+            <button id="clearAll" class="link-btn" type="button" disabled>Clear filters</button>
+          </div>
+          <section class="facet">
+            <h2 class="eyebrow">Object type</h2>
+            <div id="fType" class="chips"></div>
+          </section>
+          <section class="facet">
+            <h2 class="eyebrow">Spectral class</h2>
+            <div id="fClass" class="chips"></div>
+          </section>
+          <section class="facet">
+            <h2 class="eyebrow">Region</h2>
+            <div id="fRegion" class="chips"></div>
+          </section>
+          <section class="facet">
+            <div class="facet-row"><h2 class="eyebrow" id="distTitle">Distance from the Sun</h2><output id="distOut" for="fDist">Any distance</output></div>
+            <input id="fDist" type="range" min="0" max="1000" value="1000" aria-label="Maximum distance from the Sun">
+          </section>
+          <section class="facet">
+            <h2 class="eyebrow">Galaxy display</h2>
+            <div class="toggles">
+              <label class="switch" for="hideOthers"><span>Hide objects out of focus</span><input id="hideOthers" type="checkbox"></label>
+              <label class="switch" for="ringToggle"><span>Milky Way to scale</span><input id="ringToggle" type="checkbox"></label>
+              <label class="switch" for="webOn"><span>Connect to nearest landmarks</span><input id="webOn" type="checkbox" checked></label>
+            </div>
+          </section>
+          <section class="facet results">
+            <div class="facet-row"><h2 class="eyebrow" id="resTitle">Landmarks</h2><span class="meta" id="resMeta"></span></div>
+            <ol id="results"></ol>
+            <p class="more" id="resMore" hidden></p>
+          </section>
+          <p class="about" id="about">Generated in your browser. <a href="/blog/galaxy-3d-simulation/">How it works and sources →</a></p>
+        </div>
+      </aside>
+
+      <button id="navOpen" class="nav-open glass" type="button" hidden aria-label="Show filters">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M4.5 8h7M6.5 12h3"/></svg>
+        <span>Filters</span>
+      </button>
+
+      <div class="topbar glass">
+        <div class="trow">
+          <a class="back-link" href="/blog/galaxy-3d-simulation/" aria-label="Back to dom.polzer: the write-up and sources" title="Write-up and sources">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 3.5 5 8l4.5 4.5"/></svg>
+            <span>dom.polzer</span>
+          </a>
+          <div id="gtabs" class="gtabs" role="tablist" aria-label="Galaxy"></div>
+        </div>
+        <div class="toolbar" role="toolbar" aria-label="View controls">
+          <button id="play" class="icon-btn" type="button" aria-label="Pause galactic time" title="Pause or play (Space)">
+            <svg id="playIcon" viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3.5" width="2.6" height="9" rx="1"/><rect x="9.4" y="3.5" width="2.6" height="9" rx="1"/></svg>
+          </button>
+          <div class="seg wide-only" id="speedSeg" role="group" aria-label="Time speed">
+            <button type="button" aria-pressed="true" data-speed="1">1×</button>
+            <button type="button" aria-pressed="false" data-speed="8">8×</button>
+          </div>
+          <span class="clock" title="Galactic time. At 1× one second is about 0.8 million years when zoomed out; time slows as you zoom in.">T+ <b id="clock">0.0</b> Myr</span>
+          <span class="sep wide-only"></span>
+          <button id="resetView" class="icon-btn wide-only" type="button" aria-label="Reset view" title="Reset view">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.8v2.6h2.6"/></svg>
+          </button>
+          <button id="themeBtn" class="icon-btn" type="button" aria-label="Switch to light theme" title="Switch theme">
+            <svg id="themeIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <article id="card" class="card glass" hidden aria-live="polite"></article>
+
+      <div id="hint" class="hint">Drag to orbit · Scroll to zoom · Shift-drag to pan · Click any object</div>
+      <div id="hud" class="hud" aria-hidden="true"></div>
+    </div>
+
+    <script>
+      import "../galaxy/atlas.js";
+    </script>
+  </body>
+</html>
