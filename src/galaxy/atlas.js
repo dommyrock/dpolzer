@@ -46,28 +46,9 @@ let HOME = { yaw: 0.42, pitch: 0.93, dist: 94 }, MAX_DIST = 320, SCALE = 1;
 const canvas = $('#scene');
 const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, premultipliedAlpha: true, powerPreference: 'high-performance' });
 
-const PT_VS = `#version 300 es
-precision highp float;
-layout(location=0) in vec4 aA;
-layout(location=1) in vec4 aB;
-layout(location=2) in vec4 aC;
-layout(location=3) in vec4 aD;
-layout(location=4) in float aMatch;
-uniform mat4 uVP;
-uniform vec2 uView;
-uniform float uProj, uDpr, uPattern, uEpi, uOrbit, uReal, uMotion;
-uniform vec2 uMouse;
-uniform float uLens, uForceR, uHoverR, uPush;
-uniform int uHover, uSel, uIdBase, uPinA, uPinB;
-uniform vec4 uPinAT, uPinBT;
-uniform float uDim, uFieldDim, uLight, uMaxPt, uCamDist;
-uniform vec3 uGlow[32];
-uniform vec3 uInk[32];
-uniform vec3 uAccent;
-uniform vec3 uFocus;
-out vec3 vCol;
-out float vA, vKind, vHover, vSpin, vMix;
-vec3 placeT(float pat, float epi, float orb) {
+// Where a node is drawn, shared by the node shader (PT_VS) and the filter-match glow (MG_VS) so a
+// glow can never drift off its object. Needs aA..aC and the pin and lens uniforms declared first.
+const NODE_PLACE = `vec3 placeT(float pat, float epi, float orb) {
   float kind = aC.w;
   if (kind > 6.5) return aA.xyz;
   float ph = aB.x * epi + aB.y;
@@ -87,6 +68,44 @@ vec3 place(int id) {
   else if (id == uPinB) p = mix(p, placeT(uPinBT.x, uPinBT.y, uPinBT.z), uPinBT.w);
   return p;
 }
+// the cursor lens pushes objects aside in screen space; never the hovered or selected one
+vec4 lensPush(vec4 clip, int id) {
+  if (uLens <= 0.001 || id == uHover || id == uSel) return clip;
+  vec2 sp = (clip.xy / clip.w * 0.5 + 0.5) * uView;
+  vec2 dv = sp - uMouse;
+  float d = length(dv);
+  if (d >= uForceR) return clip;
+  float s = 1.0 - d / uForceR; s = s * s * (3.0 - 2.0 * s);
+  float f = uPush * s * uLens * (0.45 + 0.55 * clamp(uCamDist / clip.w, 0.4, 1.6));
+  vec2 n = dv / max(d, 1e-3);
+  sp += n * f + vec2(-n.y, n.x) * f * 0.25;
+  clip.xy = (sp / uView * 2.0 - 1.0) * clip.w;
+  return clip;
+}
+`;
+
+const PT_VS = `#version 300 es
+precision highp float;
+layout(location=0) in vec4 aA;
+layout(location=1) in vec4 aB;
+layout(location=2) in vec4 aC;
+layout(location=3) in vec4 aD;
+layout(location=4) in float aMatch;
+uniform mat4 uVP;
+uniform vec2 uView;
+uniform float uProj, uDpr, uPattern, uEpi, uOrbit, uReal, uMotion;
+uniform vec2 uMouse;
+uniform float uLens, uForceR, uHoverR, uPush;
+uniform int uHover, uSel, uIdBase, uPinA, uPinB;
+uniform vec4 uPinAT, uPinBT;
+uniform float uDim, uFieldDim, uLight, uMaxPt, uCamDist, uMatchGlow;
+uniform vec3 uGlow[32];
+uniform vec3 uInk[32];
+uniform vec3 uAccent;
+uniform vec3 uFocus;
+out vec3 vCol;
+out float vA, vKind, vHover, vSpin, vMix;
+${NODE_PLACE}
 void main() {
   float kind = aC.w;
   int id = gl_VertexID + uIdBase;
@@ -114,21 +133,15 @@ void main() {
   px *= mix(0.85, 1.0, keep) * (1.0 + 0.25 * hl);
   alpha *= clamp(1.35 - dist / (uCamDist * 3.0 + 1.0), 0.4, 1.0);
   alpha *= mix(1.0, kind > 5.5 ? 0.42 : 0.9, uLight);
-  vec2 sp = (clip.xy / clip.w * 0.5 + 0.5) * uView;
-  vec2 dv = sp - uMouse;
-  float d = length(dv);
+  float d = length((clip.xy / clip.w * 0.5 + 0.5) * uView - uMouse);
   float hov = 0.0;
   if (uLens > 0.001 && kind < 6.5) {
-    if (id != uHover && id != uSel && d < uForceR) {
-      float s = 1.0 - d / uForceR; s = s * s * (3.0 - 2.0 * s);
-      float f = uPush * s * uLens * (0.45 + 0.55 * clamp(uCamDist / dist, 0.4, 1.6));
-      vec2 n = dv / max(d, 1e-3);
-      sp += n * f + vec2(-n.y, n.x) * f * 0.25;
-      clip.xy = (sp / uView * 2.0 - 1.0) * clip.w;
-    }
+    clip = lensPush(clip, id);
     if (d < uHoverR) { float h = 1.0 - d / uHoverR; hov = h * h * (3.0 - 2.0 * h) * uLens * keep; }
   }
   float focus = (id == uHover || id == uSel) ? 1.0 : 0.0;
+  // a filter match is drawn as a partly hovered object: the same look, at uMatchGlow strength
+  float hot = max(focus, hl * uMatchGlow);
   if (focus > 0.5) hov = 0.0;
   int ci = int(aD.y + 0.5);
   vec3 glow = uGlow[ci], ink = uInk[ci];
@@ -136,10 +149,11 @@ void main() {
   col = mix(col, uAccent, hov * 0.7);
   alpha = min(alpha * (1.0 + hov * 0.8), 1.0);
   px *= 1.0 + hov * 0.35;
-  if (focus > 0.5) {
-    px = max(px * ((kind > 2.5 && kind < 4.5) ? 1.15 : 1.7), 7.0);
-    alpha = 1.0;
-    col = (kind > 2.5 && kind < 4.5) ? mix(col, uFocus, 0.6) : uFocus;
+  if (hot > 0.0) {
+    bool area = kind > 2.5 && kind < 4.5;
+    px = mix(px, max(px * (area ? 1.15 : 1.7), 7.0), hot);
+    alpha = mix(alpha, 1.0, hot);
+    col = mix(col, area ? mix(col, uFocus, 0.6) : uFocus, hot);
   }
   if (kind < 0.5 || kind > 5.5) alpha *= 1.0 - uMotion * 0.22 * (0.5 + 0.5 * sin(uReal * (1.3 + aD.z * 2.7) + aD.z * 40.0));
   vSpin = aD.z * 6.2832;
@@ -284,6 +298,40 @@ void main() {
   o = vec4(mix(uColor, vec3(1.0), exp(-r2 * 18.0) * 0.35 * (1.0 - uLight)) * a, a * uLight);
 }`;
 
+// Filter matches get the hover halo: the same green glow sprites buildHalo draws around a
+// hovered object, but placed on the GPU for every match at once (two layers, two draw calls).
+// It skips the object's own reveal rules, so planets glow even before their orbits are visible.
+// The hovered and selected objects are left out: buildHalo already draws their full halo.
+const MG_VS = `#version 300 es
+precision highp float;
+layout(location=0) in vec4 aA;
+layout(location=1) in vec4 aB;
+layout(location=2) in vec4 aC;
+layout(location=3) in vec4 aD;
+layout(location=4) in float aMatch;
+uniform mat4 uVP;
+uniform vec2 uView, uMouse;
+uniform float uProj, uDpr, uPattern, uEpi, uOrbit, uReal, uMotion, uMaxPt, uCamDist, uLens, uForceR, uPush;
+uniform int uHover, uSel, uPinA, uPinB;
+uniform vec4 uPinAT, uPinBT;
+uniform float uK, uC, uCap, uA, uPulse;
+out float vA;
+${NODE_PLACE}
+void main() {
+  int id = gl_VertexID;
+  vec4 clip = vec4(0.0);
+  if (aMatch > 1.5 && id != uHover && id != uSel) clip = uVP * vec4(place(id), 1.0);
+  if (clip.w < 1e-5) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); gl_PointSize = 0.0; vA = 0.0; return; }
+  clip = lensPush(clip, id);
+  float kind = aC.w, w = clip.w, px; // nodePxCss
+  if (kind > 2.5 && kind < 4.5) px = max(aD.x * clamp(pow(28.0 / w, 0.3), 0.7, 1.6), min(aC.x * uProj / w / uDpr, 260.0)) * 1.15;
+  else px = max(aD.x * clamp(pow(28.0 / w, 0.42), 0.75, 4.5) * 1.7, 7.0);
+  float pulse = 1.0 + uPulse * sin(uReal * 3.2 + aD.z * 40.0) * uMotion;
+  gl_PointSize = min(min(px * uK + uC, uCap) * pulse * uDpr, uMaxPt);
+  gl_Position = clip;
+  vA = uA;
+}`;
+
 // world-space points (web dots and particles); shares the halo fragment shader
 const WP_VS = `#version 300 es
 layout(location=0) in vec4 aP;
@@ -310,7 +358,7 @@ function program(vs, fs) {
   return { p, u };
 }
 
-let PT, HZ, LN, HL, WP, vaoWebL, vaoWebP, webLBuf, webPBuf, vaoNode, vaoField, vaoHaze, vaoLine, vaoHalo, matchBuf, lineBuf, haloBuf, maxPt = 256;
+let PT, HZ, LN, HL, WP, MG, vaoWebL, vaoWebP, webLBuf, webPBuf, vaoNode, vaoField, vaoHaze, vaoLine, vaoHalo, matchBuf, lineBuf, haloBuf, maxPt = 256;
 let nodeBuf, fieldBuf, hazeBuf;
 const HALO_MAX = 72, HALO = new Float32Array(HALO_MAX * 4);
 let nHalo = 0, nRing = 0;
@@ -329,6 +377,7 @@ function initGL() {
   try {
     PT = program(PT_VS, PT_FS); HZ = program(HZ_VS, HZ_FS); LN = program(LN_VS, LN_FS); HL = program(HL_VS, HL_FS); WP = program(WP_VS, HL_FS);
   } catch (e) { console.error(e); return false; }
+  try { MG = program(MG_VS, HL_FS); } catch (e) { console.error(e); MG = null; } // optional: matches keep their tint
   [vaoNode, nodeBuf] = vao(NODE, STRIDE, [4, 4, 4, 4]);
   matchBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, matchBuf); gl.bufferData(gl.ARRAY_BUFFER, MATCH, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 4, 0);
@@ -1032,6 +1081,11 @@ function drawWeb(light) {
   }
 }
 
+/* The green glow around a hovered or selected object (CPU sprites, buildHalo) and around
+ * filter matches (GPU pass in draw): one definition. Size = min(objectPx * k + c, cap). */
+const HOVER_HALO = [{ k: 2.2, c: 20, cap: 90, a: 0.42 }, { k: 1.3, c: 7, cap: 60, a: 0.6 }];
+const HALO_PULSE = 0.06;
+const MATCH_GLOW = 0.4; // a filter match gets this share of the hover look
 function putHalo(x, y, size, a) {
   if (nHalo >= HALO_MAX) return;
   const k = nHalo * 4;
@@ -1069,10 +1123,9 @@ function buildHalo(now) {
     nodeWorld(i, W);
     if (!project(W.x, W.y, W.z, SP)) continue;
     const px = nodePxCss(i, SP.w);
-    const pulse = 1 + 0.06 * Math.sin(t * 3.2);
-    putHalo(SP.x, SP.y, Math.min(px * 2.2 + 20, 90) * pulse, 0.42);
-    putHalo(SP.x, SP.y, Math.min(px * 1.3 + 7, 60), 0.6);
-    putHalo(SP.x, SP.y, Math.max(Math.min(px * 0.95, 40), 7), 1);
+    const pulse = 1 + HALO_PULSE * Math.sin(t * 3.2);
+    HOVER_HALO.forEach((L, k) => putHalo(SP.x, SP.y, Math.min(px * L.k + L.c, L.cap) * (k === 0 ? pulse : 1), L.a));
+    putHalo(SP.x, SP.y, Math.max(Math.min(px * 0.95, 40), 7), 1); // the bright core: hover and selection only
   }
 }
 function buildOrbits() {
@@ -1458,6 +1511,24 @@ function frame(now) {
   updateLabels();
 }
 
+// uniforms the node shader and the match glow share: both place nodes through NODE_PLACE
+function placeUniforms(u, ps, real) {
+  gl.uniformMatrix4fv(u.uVP, false, VP);
+  gl.uniform2f(u.uView, canvas.width, canvas.height);
+  gl.uniform1f(u.uProj, ps); gl.uniform1f(u.uDpr, dpr);
+  gl.uniform1f(u.uPattern, T.pattern); gl.uniform1f(u.uEpi, T.epi); gl.uniform1f(u.uOrbit, T.orbit); gl.uniform1f(u.uReal, real);
+  gl.uniform1f(u.uMotion, reducedMotion ? 0 : 1);
+  gl.uniform2f(u.uMouse, pointer.sx * dpr, (cssH - pointer.sy) * dpr);
+  gl.uniform1f(u.uLens, lens); gl.uniform1f(u.uForceR, FORCE_R * dpr); gl.uniform1f(u.uPush, PUSH * dpr);
+  gl.uniform1f(u.uMaxPt, maxPt); gl.uniform1f(u.uCamDist, cam.dist);
+}
+function focusUniforms(u) {
+  const [pa, pb] = PINS;
+  gl.uniform1i(u.uHover, hover); gl.uniform1i(u.uSel, sel);
+  gl.uniform1i(u.uPinA, pa.mix > 0 ? pa.id : -1); gl.uniform4f(u.uPinAT, pa.pat, pa.epi, pa.orb, pa.mix);
+  gl.uniform1i(u.uPinB, pb.mix > 0 ? pb.id : -1); gl.uniform4f(u.uPinBT, pb.pat, pb.epi, pb.orb, pb.mix);
+}
+const MATCH_GLOW_MAX = 2000; // above this a filter is the whole galaxy; the shader tint is enough
 const ACCENT_DARK = [0.38, 0.94, 0.85], ACCENT_LIGHT = [0.04, 0.54, 0.54];
 const FOCUS_DARK = [0.45, 1.0, 0.5], FOCUS_LIGHT = [0.0, 0.58, 0.24];
 function draw(now) {
@@ -1467,27 +1538,23 @@ function draw(now) {
   const real = (now / 1000) % 3600;
   const accent = ACCENT_DARK.map((v, c) => v + (ACCENT_LIGHT[c] - v) * light);
   const focus = FOCUS_DARK.map((v, c) => v + (FOCUS_LIGHT[c] - v) * light);
-  const fieldDim = filtering ? 0.4 : 1;
+  const fieldDim = filtering ? 0.28 : 1;
+  // filter matches: MATCH_GLOW of the hover look, eased off as matches grow (×1 at ≤10, ×0.6 at ~1,000)
+  const matchGlow = filtering && matchCount > 0 ? MATCH_GLOW * clamp(1.2 - 0.2 * Math.log10(matchCount), 0.55, 1) : 0;
 
   gl.useProgram(HZ.p);
   gl.uniformMatrix4fv(HZ.u.uVP, false, VP);
   gl.uniform1f(HZ.u.uPattern, T.pattern); gl.uniform1f(HZ.u.uProj, ps); gl.uniform1f(HZ.u.uMaxPt, maxPt);
-  gl.uniform1f(HZ.u.uLight, light); gl.uniform1f(HZ.u.uCamDist, cam.dist); gl.uniform1f(HZ.u.uDim, filtering ? 0.6 : 1);
+  gl.uniform1f(HZ.u.uLight, light); gl.uniform1f(HZ.u.uCamDist, cam.dist); gl.uniform1f(HZ.u.uDim, filtering ? 0.45 : 1);
   gl.uniform3f(HZ.u.uBg, bg[0], bg[1], bg[2]);
   gl.bindVertexArray(vaoHaze);
   gl.drawArrays(gl.POINTS, 0, N_HAZE);
 
   gl.useProgram(PT.p);
   const u = PT.u;
-  gl.uniformMatrix4fv(u.uVP, false, VP);
-  gl.uniform2f(u.uView, canvas.width, canvas.height);
-  gl.uniform1f(u.uProj, ps); gl.uniform1f(u.uDpr, dpr);
-  gl.uniform1f(u.uPattern, T.pattern); gl.uniform1f(u.uEpi, T.epi); gl.uniform1f(u.uOrbit, T.orbit); gl.uniform1f(u.uReal, real);
-  gl.uniform1f(u.uMotion, reducedMotion ? 0 : 1);
-  gl.uniform2f(u.uMouse, pointer.sx * dpr, (cssH - pointer.sy) * dpr);
-  gl.uniform1f(u.uLens, lens); gl.uniform1f(u.uForceR, FORCE_R * dpr); gl.uniform1f(u.uHoverR, HOVER_R * dpr); gl.uniform1f(u.uPush, PUSH * dpr);
-  gl.uniform1f(u.uDim, S.hide ? 0 : 0.07); gl.uniform1f(u.uFieldDim, fieldDim); gl.uniform1f(u.uLight, light);
-  gl.uniform1f(u.uMaxPt, maxPt); gl.uniform1f(u.uCamDist, cam.dist);
+  placeUniforms(u, ps, real);
+  gl.uniform1f(u.uHoverR, HOVER_R * dpr);
+  gl.uniform1f(u.uDim, S.hide ? 0 : 0.07); gl.uniform1f(u.uFieldDim, fieldDim); gl.uniform1f(u.uMatchGlow, matchGlow); gl.uniform1f(u.uLight, light);
   gl.uniform3f(u.uAccent, accent[0], accent[1], accent[2]); gl.uniform3f(u.uFocus, focus[0], focus[1], focus[2]);
 
   gl.uniform1i(u.uIdBase, 1 << 20); gl.uniform1i(u.uHover, -1); gl.uniform1i(u.uSel, -1); gl.uniform1i(u.uPinA, -1); gl.uniform1i(u.uPinB, -1);
@@ -1523,12 +1590,24 @@ function draw(now) {
 
   drawWeb(light);
   gl.useProgram(PT.p);
-  gl.uniform1i(u.uIdBase, 0); gl.uniform1i(u.uHover, hover); gl.uniform1i(u.uSel, sel);
-  const [pa, pb] = PINS;
-  gl.uniform1i(u.uPinA, pa.mix > 0 ? pa.id : -1); gl.uniform4f(u.uPinAT, pa.pat, pa.epi, pa.orb, pa.mix);
-  gl.uniform1i(u.uPinB, pb.mix > 0 ? pb.id : -1); gl.uniform4f(u.uPinBT, pb.pat, pb.epi, pb.orb, pb.mix);
+  gl.uniform1i(u.uIdBase, 0);
+  focusUniforms(u);
   gl.bindVertexArray(vaoNode);
   gl.drawArrays(gl.POINTS, 0, N);
+
+  // filter matches: the hover halo's layers (HOVER_HALO) at matchGlow strength, skipped for huge matches
+  if (MG && filtering && matchCount > 0 && matchCount <= MATCH_GLOW_MAX) {
+    const g = MG.u;
+    gl.useProgram(MG.p);
+    placeUniforms(g, ps, real);
+    focusUniforms(g);
+    gl.uniform3f(g.uColor, focus[0], focus[1], focus[2]); gl.uniform1f(g.uLight, light);
+    HOVER_HALO.forEach((L, k) => {
+      gl.uniform1f(g.uK, L.k); gl.uniform1f(g.uC, L.c); gl.uniform1f(g.uCap, L.cap); gl.uniform1f(g.uA, L.a * matchGlow);
+      gl.uniform1f(g.uPulse, k === 0 ? HALO_PULSE : 0);
+      gl.drawArrays(gl.POINTS, 0, N);
+    });
+  }
 
   if (nHalo > 0) {
     gl.useProgram(HL.p);
