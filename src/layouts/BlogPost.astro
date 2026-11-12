@@ -8,7 +8,7 @@ import HelixBand from "../components/HelixBand.astro";
 
 type Props = CollectionEntry<"blog">["data"];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, liveUrl } = Astro.props;
 // The path as a terminal location in the title band, e.g. ~/blog/<slug>
 const location = "~" + Astro.url.pathname.replace(/\/$/, "");
 ---
@@ -198,6 +198,16 @@ const location = "~" + Astro.url.pathname.replace(/\/$/, "");
         >
           {title}
         </h1>
+        {
+          liveUrl && (
+            <a
+              href={liveUrl}
+              class="mt-6 inline-flex min-h-11 items-center gap-2 bg-[var(--accent)] px-4 font-mono text-[13px] font-bold text-[#04150a] no-underline transition-colors hover:bg-[var(--accent-soft)] hover:text-[#04150a]"
+            >
+              $ open ./live →
+            </a>
+          )
+        }
       </div>
     </section>
     <main class="m-0 w-full max-w-none px-0 pb-12 pt-10 sm:pt-12">

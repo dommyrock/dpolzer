@@ -12,6 +12,9 @@ const blog = defineCollection({
 		pubDate: z.coerce.date(),
 		updatedDate: z.coerce.date().optional(),
 		heroImage: z.string().optional(),
+		// A live page for the post (e.g. an interactive demo on this site): the post
+		// shows an "open live" button and the post lists mark it LIVE.
+		liveUrl: z.string().optional(),
 	}),
 });
 

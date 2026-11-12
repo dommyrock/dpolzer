@@ -42,6 +42,7 @@ const posts = (await getCollection("blog")).sort(
               </span>
               <span class="log-title">
                 {post.data.title}
+                {post.data.liveUrl && <span class="tag tag-accent ml-2 align-middle">live</span>}
                 <span class="mt-1 block font-[Atkinson,sans-serif] text-sm leading-normal text-[var(--text-muted)]">
                   {post.data.description}
                 </span>

@@ -16,11 +16,13 @@ My personal site and blog: work experience, featured projects and posts. A fully
 │   │   ├── SectionHeading.astro   # numbered section titles ("01  Featured projects")
 │   │   └── ...              # header, footer, hero, head tags
 │   ├── content/blog/        # one Markdown file per post
+│   ├── galaxy/              # Galaxy 3D simulation (WebGL2): engine, shape kit, one module per galaxy
 │   ├── content.config.ts    # frontmatter schema of the posts
 │   ├── layouts/BlogPost.astro     # page layout of a post and of /about
 │   ├── pages/
 │   │   ├── index.astro      # /
 │   │   ├── about.astro      # /about
+│   │   ├── galaxy-3d.astro  # /galaxy-3d, the full-screen galaxy simulation (own CSS, no global.css)
 │   │   ├── blog/index.astro # /blog, every post
 │   │   ├── blog/[...slug].astro   # /blog/<slug>
 │   │   └── rss.xml.js       # /rss.xml
@@ -57,6 +59,7 @@ Run from the repository root with Node 22 (`nvm use` reads `.nvmrc`):
    description: 'One or two sentences for the post list and RSS.'
    pubDate: 'Oct 15 2026'
    heroImage: '/image-in-public.webp'   # optional
+   liveUrl: '/some-live-page/'          # optional: adds an "open ./live" button and a LIVE tag in /blog
    ---
 
    Body text. The layout prints the title, so start without a `# heading`.
@@ -65,7 +68,11 @@ Run from the repository root with Node 22 (`nvm use` reads `.nvmrc`):
 2. Add an entry at the top of the `posts` list in `src/components/RecentPosts.astro`, so it shows on the home page. `/blog`, the sitemap and the RSS feed pick the post up on their own.
 3. Images go in `public/` and are referenced from `/`.
 
-Featured projects are a separate list, in `src/components/FeaturedProject.astro`.
+Featured projects are a separate list, in `src/components/FeaturedProject.astro`. A project's `liveUrl` can point at a page on this site (it then opens in the same tab).
+
+## Galaxy 3D simulation
+
+`/galaxy-3d/` renders eight galaxies with WebGL2. `src/galaxy/atlas.js` is the engine (rendering, UI, tabs). `catalog.js` builds a galaxy's objects from a definition in `src/galaxy/galaxies/`. The Milky Way ships with the page, and the other galaxies are separate chunks that load the first time their tab opens. To add a galaxy, write a definition with `external()` plus `spiral()` or a custom `pos()` from `galaxies/kit.js`, then add it to `GALAXIES` in `atlas.js`. The post `galaxy-3d-simulation.md` lists the sources for the real values.
 
 ## Deployment
 
