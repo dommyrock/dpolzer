@@ -6,15 +6,15 @@
  *   - 12 smaller ones hugging the edge, counter-rotating
  *   - 2 bright comets
  * Each particle uses the halo shader's falloff (HL_FS), pre-rendered once
- * per theme into a sprite. Draws into a small canvas around the link and
+ * into a sprite. Draws into a small canvas around the link and
  * only animates while visible, so it costs nothing at rest.
  * ===================================================================== */
 import { TAU, clamp, smooth } from './core.js';
 
 const PAD = 24; // room around the button for the ring
 
-function sprite(rgb, light) {
-  // the halo fragment shader: two Gaussian lobes, a white-hot core in the dark theme
+function sprite(rgb) {
+  // the halo fragment shader: two Gaussian lobes and a white-hot core
   const S = 64, c = document.createElement('canvas');
   c.width = c.height = S;
   const g = c.getContext('2d'), img = g.createImageData(S, S);
@@ -22,7 +22,7 @@ function sprite(rgb, light) {
     const cx = (x + 0.5) / S * 2 - 1, cy = (y + 0.5) / S * 2 - 1, r2 = cx * cx + cy * cy, o = (y * S + x) * 4;
     if (r2 > 1) continue;
     const a = Math.min(1, Math.exp(-r2 * 4) * 0.8 + Math.exp(-r2 * 18) * 0.7);
-    const wh = light ? 0 : Math.exp(-r2 * 18) * 0.35;
+    const wh = Math.exp(-r2 * 18) * 0.35;
     img.data[o] = (rgb[0] + (255 - rgb[0]) * wh) | 0;
     img.data[o + 1] = (rgb[1] + (255 - rgb[1]) * wh) | 0;
     img.data[o + 2] = (rgb[2] + (255 - rgb[2]) * wh) | 0;
@@ -33,10 +33,9 @@ function sprite(rgb, light) {
 }
 function readAccent() {
   const cs = getComputedStyle(document.documentElement);
-  const light = cs.getPropertyValue('--scene-light').trim() === '1';
   const m = /^#?([0-9a-f]{6})$/i.exec(cs.getPropertyValue('--accent').trim());
   const n = m ? parseInt(m[1], 16) : 0x62f0d8;
-  return { rgb: [n >> 16 & 255, n >> 8 & 255, n & 255], light };
+  return [n >> 16 & 255, n >> 8 & 255, n & 255];
 }
 
 export function mountHalo(link) {
@@ -47,7 +46,7 @@ export function mountHalo(link) {
   const ctx = cv.getContext('2d');
   if (!ctx) return;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let on = false, p = 0, raf = 0, last = 0, spr = null, light = false, key = '';
+  let on = false, p = 0, raf = 0, last = 0, spr = null;
 
   // a point `off` px outside the pill (width w, height h, centered at cx, cy), at s ∈ [0, 1) of its perimeter
   const pill = (w, h, off, s, cx, cy) => {
@@ -82,7 +81,7 @@ export function mountHalo(link) {
     if (p < 0.01 && !on) { raf = 0; return; }
     const k = smooth(Math.min(1, p)), t = reducedMotion ? 0 : now / 1000;
     const cx = W / 2, cy = H / 2, w = r.width, h = r.height, grow = (1 - k) * 8;
-    ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';
+    ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 32; i++) {
       const a = i / 32 * TAU + t * 0.55;
       const sweep = 0.5 + 0.5 * Math.sin(a * 3 - t * 2.1);
@@ -102,11 +101,7 @@ export function mountHalo(link) {
   };
   const set = (v) => {
     on = v;
-    if (v) {
-      // pick up the theme's accent (dark: additive glow, light: printed ink), as the scene does
-      const acc = readAccent(), next = acc.rgb.join() + acc.light;
-      if (next !== key) { key = next; light = acc.light; spr = sprite(acc.rgb, light); }
-    }
+    if (v && !spr) spr = sprite(readAccent());
     if (!raf && spr) { last = performance.now(); raf = requestAnimationFrame(frame); }
   };
   link.addEventListener('mouseenter', () => set(true));

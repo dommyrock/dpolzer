@@ -3,7 +3,7 @@
    Ported from the standalone "Milky Way Atlas" page; the galaxy tabs, facts
    panel and the switch transition are at the end of this file.
    Layout: full-bleed stage; floating glass nav on the left, glass toolbar top
-   right, detail card right. Dark-first: bare :root holds the dark palette.
+   right, detail card right. Dark only: it is a space scene.
    ========================================================================== */
 :root {
   --void: #05060c;          /* page / scene background */
@@ -25,7 +25,6 @@
   /* spectral classes */
   --c-o: #9db4ff; --c-b: #aec3ff; --c-a: #d3deff; --c-f: #f6f4ff;
   --c-g: #fff1d6; --c-k: #ffcf96; --c-m: #ffad6b; --c-wd: #e4ecff;
-  --scene-light: 0;         /* read by the WebGL scene */
   --font-display: "Unbounded", "Geist", system-ui, sans-serif;
   --font-ui: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -34,48 +33,6 @@
   --gutter: 16px;
   color-scheme: dark;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --void: #e9ecf3; --void-2: #dfe3ec;
-    --ink: #11162a; --muted: #545d78; --faint: #8b93ab;
-    --glass: rgba(249, 250, 254, 0.62); --glass-strong: rgba(251, 252, 255, 0.9);
-    --line: rgba(22, 32, 74, 0.12); --line-strong: rgba(22, 32, 74, 0.24);
-    --sheen: rgba(255, 255, 255, 0.75); --shadow: rgba(28, 38, 84, 0.2);
-    --chip: rgba(17, 22, 42, 0.04); --chip-hover: rgba(17, 22, 42, 0.08);
-    --accent: #0b8a8a; --accent-ink: #ffffff; --halpha: #c1285a;
-    --c-o: #2c4fd6; --c-b: #3f66dc; --c-a: #5872b8; --c-f: #7a7894;
-    --c-g: #a8781e; --c-k: #c4621c; --c-m: #b8401f; --c-wd: #6f86b6;
-    --scene-light: 1;
-    color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --void: #e9ecf3; --void-2: #dfe3ec;
-  --ink: #11162a; --muted: #545d78; --faint: #8b93ab;
-  --glass: rgba(249, 250, 254, 0.62); --glass-strong: rgba(251, 252, 255, 0.9);
-  --line: rgba(22, 32, 74, 0.12); --line-strong: rgba(22, 32, 74, 0.24);
-  --sheen: rgba(255, 255, 255, 0.75); --shadow: rgba(28, 38, 84, 0.2);
-  --chip: rgba(17, 22, 42, 0.04); --chip-hover: rgba(17, 22, 42, 0.08);
-  --accent: #0b8a8a; --accent-ink: #ffffff; --halpha: #c1285a;
-  --c-o: #2c4fd6; --c-b: #3f66dc; --c-a: #5872b8; --c-f: #7a7894;
-  --c-g: #a8781e; --c-k: #c4621c; --c-m: #b8401f; --c-wd: #6f86b6;
-  --scene-light: 1;
-  color-scheme: light;
-}
-:root[data-theme="dark"] {
-  --void: #05060c; --void-2: #0a0c18;
-  --ink: #e8eaf5; --muted: #8d93ad; --faint: #5c627c;
-  --glass: rgba(12, 14, 27, 0.58); --glass-strong: rgba(14, 16, 31, 0.86);
-  --line: rgba(160, 176, 240, 0.14); --line-strong: rgba(160, 176, 240, 0.28);
-  --sheen: rgba(255, 255, 255, 0.07); --shadow: rgba(0, 0, 0, 0.6);
-  --chip: rgba(255, 255, 255, 0.035); --chip-hover: rgba(255, 255, 255, 0.075);
-  --accent: #62f0d8; --accent-ink: #03201b; --halpha: #ff6289;
-  --c-o: #9db4ff; --c-b: #aec3ff; --c-a: #d3deff; --c-f: #f6f4ff;
-  --c-g: #fff1d6; --c-k: #ffcf96; --c-m: #ffad6b; --c-wd: #e4ecff;
-  --scene-light: 0;
-  color-scheme: dark;
-}
-
 html, body { height: 100%; }
 img { max-width: 100%; }
 body {
