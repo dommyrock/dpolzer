@@ -446,7 +446,7 @@ const S = { q: '', tokens: [], type: new Set(), cls: new Set(), region: new Set(
 let filtering = false, matchCount = 0;
 let hover = -1, sel = -1, navOpen = !narrowMQ.matches;
 let cssW = 1, cssH = 1, dpr = 1, dprCap = 2, shiftNdc = 0, camEye = [0, 0, 0];
-let light = 0, lightTarget = 0, bg = [0.02, 0.024, 0.047];
+const light = 0, bg = [0.02, 0.024, 0.047]; // dark only: --void #05060c
 let lastInteract = performance.now();
 const pointer = { x: 0, y: 0, sx: 0, sy: 0, inside: false, mouse: true, down: false, dragging: false, pan: false, downHover: -1, startX: 0, startY: 0, lx: 0, ly: 0, t0: 0 };
 const touches = new Map();
@@ -514,7 +514,7 @@ const el = {
   fDist: $('#fDist'), distOut: $('#distOut'), hideOthers: $('#hideOthers'), webOn: $('#webOn'),
   results: $('#results'), resTitle: $('#resTitle'), resMeta: $('#resMeta'), resMore: $('#resMore'),
   card: $('#card'), tip: $('#tip'), labels: $('#labels'), hint: $('#hint'), hud: $('#hud'),
-  clock: $('#clock'), play: $('#play'), playIcon: $('#playIcon'), speedSeg: $('#speedSeg'), themeBtn: $('#themeBtn'), themeIcon: $('#themeIcon'),
+  clock: $('#clock'), play: $('#play'), playIcon: $('#playIcon'), speedSeg: $('#speedSeg'),
   navOpen: $('#navOpen'), navClose: $('#navClose'), resetView: $('#resetView'), brandSub: $('#brandSub'),
   brandName: $('#brandName'), gtabs: $('#gtabs'), gfacts: $('#gfacts'), gblurb: $('#gblurb'), about: $('#about'), distTitle: $('#distTitle'),
   ring: $('#ringToggle'),
@@ -1286,26 +1286,6 @@ el.navOpen.addEventListener('click', () => setNav(true));
 narrowMQ.addEventListener('change', () => setNav(!narrowMQ.matches));
 setNav(navOpen);
 
-/* ---------- theme ---------- */
-function readTheme() {
-  const cs = getComputedStyle(document.documentElement);
-  lightTarget = cs.getPropertyValue('--scene-light').trim() === '1' ? 1 : 0;
-  const hex = cs.getPropertyValue('--void').trim();
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (m) { const n = parseInt(m[1], 16); bgTarget = [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
-  el.themeBtn.setAttribute('aria-label', lightTarget ? 'Switch to dark theme' : 'Switch to light theme');
-  el.themeIcon.innerHTML = lightTarget
-    ? '<path d="M13 9.6A5.5 5.5 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6Z"/>'
-    : '<circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>';
-}
-let bgTarget = bg.slice();
-el.themeBtn.addEventListener('click', () => {
-  document.documentElement.setAttribute('data-theme', lightTarget ? 'dark' : 'light');
-});
-new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-matchMedia('(prefers-color-scheme: light)').addEventListener('change', readTheme);
-readTheme();
-light = lightTarget; bg = bgTarget.slice();
 
 
 /* ===================================================================== *
@@ -1473,11 +1453,6 @@ function frame(now) {
   const ks = 1 - Math.exp(-dt * 14);
   pointer.sx += (pointer.x - pointer.sx) * ks; pointer.sy += (pointer.y - pointer.sy) * ks;
 
-  // theme crossfade
-  const kl = 1 - Math.exp(-dt * 7);
-  light += (lightTarget - light) * kl;
-  for (let c = 0; c < 3; c++) bg[c] += (bgTarget[c] - bg[c]) * kl;
-
   // picking
   const prevHover = hover;
   if (pointer.inside && pointer.mouse && !pointer.down && !tween) {
@@ -1529,15 +1504,13 @@ function focusUniforms(u) {
   gl.uniform1i(u.uPinB, pb.mix > 0 ? pb.id : -1); gl.uniform4f(u.uPinBT, pb.pat, pb.epi, pb.orb, pb.mix);
 }
 const MATCH_GLOW_MAX = 2000; // above this a filter is the whole galaxy; the shader tint is enough
-const ACCENT_DARK = [0.38, 0.94, 0.85], ACCENT_LIGHT = [0.04, 0.54, 0.54];
-const FOCUS_DARK = [0.45, 1.0, 0.5], FOCUS_LIGHT = [0.0, 0.58, 0.24];
+const ACCENT = [0.38, 0.94, 0.85], FOCUS = [0.45, 1.0, 0.5];
 function draw(now) {
   gl.clearColor(bg[0], bg[1], bg[2], 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
   const ps = projScale() * dpr;
   const real = (now / 1000) % 3600;
-  const accent = ACCENT_DARK.map((v, c) => v + (ACCENT_LIGHT[c] - v) * light);
-  const focus = FOCUS_DARK.map((v, c) => v + (FOCUS_LIGHT[c] - v) * light);
+  const accent = ACCENT, focus = FOCUS;
   const fieldDim = filtering ? 0.28 : 1;
   // filter matches: MATCH_GLOW of the hover look, eased off as matches grow (×1 at ≤10, ×0.6 at ~1,000)
   const matchGlow = filtering && matchCount > 0 ? MATCH_GLOW * clamp(1.2 - 0.2 * Math.log10(matchCount), 0.55, 1) : 0;
