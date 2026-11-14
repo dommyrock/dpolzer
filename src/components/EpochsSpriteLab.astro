@@ -1,0 +1,66 @@
+---
+// Infographic: the same four building functions, re-run with a new seed every few seconds.
+// Uses the real generator from src/epochs, loaded when the figure scrolls into view.
+const ids = ["e4:l0:1:0", "e7:l4:2:0", "e9:l5:1:0", "e11:l7:2:0"];
+const names = ["Medieval hall", "Art-deco tower", "Neon tower", "Vertical forest"];
+---
+
+<figure class="ep-lab" data-ids={ids.join(",")}>
+  <div class="ep-lab-row">
+    {
+      names.map((n) => (
+        <div class="ep-lab-cell">
+          <div class="ep-lab-stage" />
+          <span>{n}</span>
+        </div>
+      ))
+    }
+  </div>
+  <figcaption>Same function, new seed: <b class="ep-lab-seed">–</b></figcaption>
+</figure>
+
+<script>
+  const lab = document.querySelector<HTMLElement>(".ep-lab");
+  if (lab) {
+    const io = new IntersectionObserver(async ([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      const [{ epochItems, renderItem }, { SS }] = await Promise.all([import("../epochs/sprites"), import("../epochs/voxel")]);
+      const ids = lab.dataset.ids!.split(",");
+      const items = ids.map((id) => epochItems(parseInt(id.slice(1), 10)).find((it) => it[0] === id)!);
+      const stages = [...lab.querySelectorAll<HTMLElement>(".ep-lab-stage")];
+      const label = lab.querySelector(".ep-lab-seed")!;
+      let seed = 20261114, on = true;
+      new IntersectionObserver(([v]) => (on = v.isIntersecting)).observe(lab);
+      const draw = () => {
+        if (!on || document.hidden) return;
+        label.textContent = String(seed);
+        items.forEach((it, i) => {
+          if (!it) return;
+          const c = renderItem(it, seed).canvas;
+          const k = Math.min(1, 150 / (c.height / SS), 130 / (c.width / SS));
+          c.style.width = `${(c.width / SS) * k}px`; c.style.height = `${(c.height / SS) * k}px`;
+          c.className = "ep-lab-sprite";
+          stages[i].replaceChildren(c);
+        });
+        seed += 7919;
+      };
+      draw();
+      setInterval(draw, 2600);
+    }, { rootMargin: "200px" });
+    io.observe(lab);
+  }
+</script>
+
+<style is:global>
+  .ep-lab { margin: 1.8em 0 2em; padding: 1rem 1rem 0.8rem; border: 1px solid var(--border); border-radius: 4px; background: radial-gradient(120% 100% at 50% 0%, #1a2430, var(--surface)); }
+  .ep-lab-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .ep-lab-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); text-align: center; }
+  .ep-lab-stage { height: 160px; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+  .prose .ep-lab-sprite { margin: 0; animation: ep-pop 0.45s cubic-bezier(0.3, 1.5, 0.5, 1); transform-origin: 50% 100%; }
+  .ep-lab figcaption { margin-top: 0.7rem; padding-top: 0.6rem; border-top: 1px solid var(--border-soft); font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); }
+  .ep-lab figcaption b { color: var(--accent); font-weight: 500; }
+  @keyframes ep-pop { from { transform: scale(1.12, 0.2); opacity: 0.3; } }
+  @media (max-width: 720px) { .ep-lab-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (prefers-reduced-motion: reduce) { .prose .ep-lab-sprite { animation: none; } }
+</style>

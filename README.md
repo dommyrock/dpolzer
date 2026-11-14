@@ -74,6 +74,10 @@ Featured projects are a separate list, in `src/components/FeaturedProject.astro`
 
 `/galaxy-3d/` renders eight galaxies with WebGL2. `src/galaxy/atlas.js` is the engine (rendering, UI, tabs). `catalog.js` builds a galaxy's objects from a definition in `src/galaxy/galaxies/`. The Milky Way ships with the page, and the other galaxies are separate chunks that load the first time their tab opens. To add a galaxy, write a definition with `external()` plus `spiral()` or a custom `pos()` from `galaxies/kit.js`, then add it to `GALAXIES` in `atlas.js`. The post `galaxy-3d-simulation.md` lists the sources for the real values.
 
+## Epochs: procedural city
+
+`/epochs/` and the post `procedural-city-14-epochs.mdx` both mount `<game-loop-2d-ortho>`, a web component whose source is in `src/epochs/` (PixiJS; every sprite is generated at runtime, there are no image assets). `src/components/EpochsDemo.astro` embeds it full-bleed in a post; the `Epochs*.astro` components next to it are the post's infographics. The post states measured sizes, so re-measure them if `src/epochs/` changes.
+
 ## Deployment
 
 Cloudflare Pages builds the site with `npm run build` and serves `dist/`. Every page is prerendered, so there is no SSR adapter and no Worker runs per request. `public/_headers` sets the cache headers.
