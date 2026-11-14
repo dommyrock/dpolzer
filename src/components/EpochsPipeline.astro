@@ -1,0 +1,42 @@
+---
+// Infographic: the four steps from a function to a sprite on screen. CSS only.
+const steps = [
+  { k: "01", t: "Voxel model", d: "a TypeScript function fills a small 3D grid" },
+  { k: "02", t: "Isometric render", d: "each voxel becomes a 4×4 pixel cube, back to front" },
+  { k: "03", t: "Scale2x", d: "edges are smoothed while doubling the size" },
+  { k: "04", t: "Atlas", d: "one texture page per epoch, built on demand" },
+];
+---
+
+<figure class="ep-pipe" aria-label="Sprite pipeline: voxel model, isometric render, Scale2x, atlas">
+  <div class="ep-pipe-row">
+    {
+      steps.map((s, i) => (
+        <div class="ep-step" style={`--i:${i}`}>
+          <span class="ep-k">{s.k}</span>
+          <strong>{s.t}</strong>
+          <small>{s.d}</small>
+        </div>
+      ))
+    }
+  </div>
+</figure>
+
+<style>
+  .ep-pipe { margin: 1.8em 0 2em; }
+  .ep-pipe-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .ep-step {
+    padding: 0.7rem 0.8rem 0.8rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface);
+    display: flex; flex-direction: column; gap: 4px; line-height: 1.35;
+    animation: ep-lit 6s linear infinite; animation-delay: calc(var(--i) * 1.5s);
+  }
+  .ep-k { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.1em; }
+  .ep-step strong { font-family: var(--font-display); font-size: 0.98rem; }
+  .ep-step small { font-size: 0.78rem; color: var(--text-muted); }
+  .ep-step { position: relative; }
+  .ep-step::after { content: ""; position: absolute; left: -1px; right: -1px; bottom: -1px; height: 2px; background: var(--accent); opacity: 0; animation: ep-bar 6s linear infinite; animation-delay: calc(var(--i) * 1.5s); }
+  @keyframes ep-bar { 0%, 24% { opacity: 1; } 25%, 100% { opacity: 0; } }
+  @keyframes ep-lit { 0%, 24% { border-color: var(--accent); } 25%, 100% { border-color: var(--border); } }
+  @media (max-width: 720px) { .ep-pipe-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (prefers-reduced-motion: reduce) { .ep-step, .ep-step::after { animation: none; } }
+</style>

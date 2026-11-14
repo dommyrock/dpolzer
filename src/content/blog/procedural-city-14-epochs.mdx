@@ -1,0 +1,84 @@
+---
+title: 'A city that grows through 14 epochs, in one web component with no image files'
+description: 'An isometric city simulation that runs from a forest camp to the Moon and Mars, embedded in this post as a web component. All 1,879 sprites are generated in the browser from code written with LLM help; the whole thing downloads as about 249 KB of JavaScript.'
+pubDate: 'Nov 14 2026'
+liveUrl: '/epochs/'
+---
+
+import EpochsDemo from '../../components/EpochsDemo.astro';
+import EpochsBudget from '../../components/EpochsBudget.astro';
+import EpochsPipeline from '../../components/EpochsPipeline.astro';
+import EpochsSpriteLab from '../../components/EpochsSpriteLab.astro';
+
+<EpochsDemo />
+
+Press **→** to unlock the next zone, or the play button to let it run. Each epoch has five zones; at the fifth, a jump button spends the treasury and moves the whole city into the next epoch. There are fourteen: forest camp, hamlet, village, medieval town, walled city, industrial, early-modern, modern, neon, cyberpunk, garden metropolis, spaceport, and finally shuttle runs to the Moon and Mars.
+
+## The experiment
+
+I wanted to know two things:
+
+1. Can a game-loop simulation with this much on screen live **inside an ordinary blog post**, as one custom element, without a game engine, an iframe or a loading screen?
+2. Can the entire art library be **generated**, with an LLM writing the generators, so the download contains no images at all?
+
+Both worked. The element above is `<game-loop-2d-ortho>`. It is the same build that runs [full screen](/epochs/), dropped into this static Astro page with one import.
+
+## What it costs
+
+<EpochsBudget rows={[
+  { label: 'Game + sprite code', kb: 106, note: '7,500 lines of TypeScript; about 5,800 of them describe buildings, trees and vehicles' },
+  { label: 'PixiJS renderer', kb: 143, note: 'WebGL batching, textures, containers' },
+  { label: 'Images, fonts, audio', kb: 0, note: 'none: every pixel is drawn at runtime' },
+]} />
+
+Sizes are gzipped, measured on this page's production build: **about 249 KB in total**, less than one typical hero photo.
+
+Measured on an Apple M5 Pro in headless Chrome at 1400×860:
+
+| | |
+|---|---|
+| Sprites generated | 1,879 across 14 epochs, 50–300 per epoch |
+| Time to generate them | 10–110 ms per epoch, 0.67 s for all of them |
+| Map | 160×160 tiles, about 19,000 of them land |
+| Frame cost | 3.5 ms in the first epoch, 5 ms mid-game, about 10 ms in the last |
+
+Only the current epoch's sprites exist at any time. The next epoch is generated in the background while you play, and older texture pages are freed, so memory stays flat as the city grows. Rendering stops when the element scrolls out of view.
+
+## Tech choices
+
+- **PixiJS v8 as the renderer, and nothing else.** A full engine such as Phaser brings physics, scenes and audio that a city-growth loop never uses. Plain Canvas2D would have been fine for the village but not for 30,000 sprites with lights. Pixi batches all of it into a handful of draw calls.
+- **A web component with a shadow root.** The HUD's styles cannot leak into the site and the site's cannot leak in. Embedding is one tag.
+- **The city is a pure function of `(seed, step)`.** There is no saved state. Any of the 70 steps can be computed directly, which is why you can scrub backwards and why the same seed always gives the same island.
+- **The camera is a GPU transform.** Putting the world in a Pixi render group means a camera move updates one matrix instead of every sprite. That change alone took the last epoch from 15 ms to 9 ms per frame.
+
+## How the art is generated
+
+Nothing is drawn by hand and no image model is involved. Every sprite starts as a function that fills a small voxel grid: walls, a roof, a window grid, a vine hanging down a facade.
+
+<EpochsPipeline />
+
+A tile is 8 voxels wide, a storey is 3 tall. The renderer paints voxels back to front as tiny shaded cubes, with a little colour noise so surfaces look dithered rather than flat. Windows and neon go to a second "light" layer that fades in at night. A Scale2x pass then doubles the sprite while rounding the stair-steps, which is what keeps it from looking blocky at full screen.
+
+Each generator takes a seeded random source and a size level, so one function yields a family of buildings:
+
+<EpochsSpriteLab />
+
+The world is generated the same way. A seeded island gets rivers, lakes and an irregular street grid. It is divided into about 65 districts, each with a character (high-rise core, mid-rise, low-rise, park, plaza), its own slice of the building library and a colour wash. That is what makes the city read as quarters from far away instead of as noise.
+
+## Where the LLMs came in
+
+The project was built in conversation with Claude in Claude Code. The split of work looked like this:
+
+- **Engine and world generation** were written in the main session: the voxel renderer, the atlas packer, the layout rules, the HUD.
+- **Sprite libraries for epochs 7–14** were written by sub-agents working in parallel, one or two epochs each. Each got a written art brief (palette, silhouettes to aim for, height ranges) and one file to own.
+- **The agents reviewed their own output.** A small gallery page renders every sprite of an epoch on one sheet. An agent would write generators, screenshot the sheet by day and by night, look at it, and revise. Most of the visual quality came from that loop rather than from the first draft.
+- **Feedback stayed human.** "Too pixelated", "the late epochs all look the same", "it reads as one grey blob" were my notes after playing a build, and each turned into a concrete change: the Scale2x pass, rebuilt libraries with distinct palettes, the district system.
+
+What this buys is variety at almost no download cost. A new building type is 20–60 lines of code and compresses to a few hundred bytes, where a painted sprite sheet of the same family would be tens of kilobytes.
+
+## Limits
+
+- It is voxel-style pixel art, and it will not match hand-drawn sprites for charm.
+- The last epochs draw around 30,000 sprites. That is comfortable on a recent laptop and will be slower on older phones.
+- The camera is automatic; there is no manual pan or zoom yet.
+- The economy is decorative: coins fill up and are spent on the jump, but nothing is gated by them.
