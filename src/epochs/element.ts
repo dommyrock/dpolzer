@@ -44,7 +44,7 @@ export class GameLoop2dOrtho extends HTMLElement {
   private playing = false; private timer = 0; private peakTimer = 0;
   private shown = { coins: 0, pop: 0 }; private raf = 0;
   private target = { coins: 0, pop: 0, income: 0, cap: 0 }; private last = 0;
-  private ro?: ResizeObserver; private io?: IntersectionObserver;
+  private ro?: ResizeObserver; private io?: IntersectionObserver; private seen = true;
   private $!: <T extends HTMLElement>(s: string) => T;
 
   connectedCallback(): void {
@@ -57,10 +57,21 @@ export class GameLoop2dOrtho extends HTMLElement {
 
     const input = this.$<HTMLInputElement>('input');
     input.addEventListener('input', () => { this.stop(); this.go(this.epoch, +input.value); });
+    // Pointer input maps to the five equal blocks. (A native range puts its stops at 0/25/50/75/100 %,
+    // so a click on the near half of a block would land on the zone before it.)
+    const track = this.$('.track');
+    const pickZone = (e: PointerEvent) => {
+      const r = track.getBoundingClientRect();
+      const z = Math.max(1, Math.min(ZONES, Math.floor(((e.clientX - r.left) / r.width) * ZONES) + 1));
+      if (z !== this.zone) { this.stop(); this.go(this.epoch, z); }
+    };
+    track.addEventListener('pointerdown', (e) => { if (e.button !== 0) return; track.setPointerCapture(e.pointerId); pickZone(e); });
+    track.addEventListener('pointermove', (e) => { if (track.hasPointerCapture(e.pointerId)) pickZone(e); });
     this.$('.jump').addEventListener('click', () => { if (this.canJump()) this.go(this.epoch + 1, 1); });
     this.$('.play').addEventListener('click', () => (this.playing ? this.stop() : this.play()));
     this.$('.again').addEventListener('click', () => { this.stop(); this.go(1, 1); });
     window.addEventListener('keydown', this.onKey);
+    document.addEventListener('visibilitychange', this.wake);
 
     const seed = parseInt(this.getAttribute('seed') ?? '', 10) || 20261114;
     const game = new Game();
@@ -72,7 +83,7 @@ export class GameLoop2dOrtho extends HTMLElement {
       this.ro = new ResizeObserver(() => game.resize());
       this.ro.observe(this);
       // stop rendering while scrolled out of view
-      this.io = new IntersectionObserver(([en]) => (en.isIntersecting ? game.app.ticker.start() : game.app.ticker.stop()));
+      this.io = new IntersectionObserver(([en]) => { this.seen = en.isIntersecting; this.seen ? game.app.ticker.start() : game.app.ticker.stop(); this.wake(); });
       this.io.observe(this);
       if (this.hasAttribute('autoplay')) this.play();
     });
@@ -81,7 +92,7 @@ export class GameLoop2dOrtho extends HTMLElement {
   /** Arrow keys step through zones from anywhere on the page (except while typing in a form field). */
   private onKey = (e: KeyboardEvent): void => {
     const t = e.composedPath()[0] as HTMLElement | undefined;
-    const own = !!t && this.shadowRoot!.contains(t);
+    const own = !!t && (t === this || this.shadowRoot!.contains(t)); // the host itself holds focus after a click on the canvas or the zone bar
     if (e.metaKey || e.ctrlKey || e.altKey || !this.game) return;
     if (!own && t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
     if (e.key === 'ArrowRight') { this.stop(); this.advance(); }
@@ -93,6 +104,7 @@ export class GameLoop2dOrtho extends HTMLElement {
 
   disconnectedCallback(): void {
     window.removeEventListener('keydown', this.onKey);
+    document.removeEventListener('visibilitychange', this.wake);
     this.stop(); this.ro?.disconnect(); this.io?.disconnect(); cancelAnimationFrame(this.raf);
     this.game?.destroy(); this.game = null;
   }
@@ -181,9 +193,13 @@ export class GameLoop2dOrtho extends HTMLElement {
     this.playing = true; this.$('.play').classList.add('on'); this.schedule();
   }
   private stop(): void { this.playing = false; clearTimeout(this.timer); this.shadowRoot && this.$('.play').classList.remove('on'); }
+  /** Autoplay waits while nothing is drawn (scrolled away or tab hidden): steps taken then would only queue animations that never run. */
+  private wake = (): void => { if (this.playing) this.schedule(); };
   private schedule(): void {
     clearTimeout(this.timer);
-    if (this.epoch === EPOCHS && this.zone === ZONES) { this.stop(); return; }
+    if (!this.seen || document.hidden) return;
+    // at the peak, linger, then start the loop again from the forest camp
+    if (this.epoch === EPOCHS && this.zone === ZONES) { this.timer = window.setTimeout(() => this.go(1, 1), 9000); return; }
     this.timer = window.setTimeout(() => this.advance(), this.zone === ZONES ? 3000 : this.zone === 1 ? 3200 : 2300);
   }
 }

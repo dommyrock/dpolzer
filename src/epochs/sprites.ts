@@ -35,7 +35,7 @@ export const renderItem = ([id, make, baseZ]: Item, seed: number): Rendered => {
   return render(make(rnd), Math.floor(rnd() * 1e9), baseZ ?? 0);
 };
 
-const groupOf = (id: string) => (id.charCodeAt(0) === 101 && id.indexOf(':') <= 3 ? parseInt(id.slice(1), 10) : 0);
+export const groupOf = (id: string) => (id.charCodeAt(0) === 101 && id.indexOf(':') <= 3 ? parseInt(id.slice(1), 10) : 0);
 const PAGE = 4096, GUT = 4;
 
 /** Builds sprite groups lazily (0 = shared, 1..10 = epochs), each packed into atlas pages. */

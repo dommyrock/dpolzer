@@ -1,6 +1,6 @@
 import { Application, Container, Graphics, Sprite, Texture } from 'pixi.js';
-import { Registry, counts, type Def } from './sprites';
-import { World, N, CX, CY, RING, STEPS, DISTRICT_TINT, TINT_STRENGTH, epochOf, zoneOf, type Plan, type Tile } from './world';
+import { Registry, counts, groupOf, type Def } from './sprites';
+import { World, N, CX, CY, RING, STEPS, EPOCHS, DISTRICT_TINT, TINT_STRENGTH, epochOf, zoneOf, type Plan, type Tile } from './world';
 import { clamp, hash, lerp, rng, smoothstep, type R } from './rng';
 import { EPOCH_META } from './meta';
 import { makeBody } from './space';
@@ -60,7 +60,8 @@ export class Game {
   private roadSet = new Set<number>(); private freeSet = new Set<number>();
   private moverEpoch = -1;
   private destroyed = false;
-  private evictT = 0;
+  private use = new Int32Array(EPOCHS + 2); // live sprites per epoch group: an epoch's textures are only freed once nothing shows them
+  private gGrp = new Uint8Array(N * N); // epoch group of the texture each ground sprite is showing
   private dS = 0; // district colour strength for the current epoch
   private bodies: { c: Container; x: number; y: number; R: number; epoch: number; seed: number; items: Sprite[][]; on: boolean }[] = [];
   private rockets: { spr: Sprite; vy: number; t: number }[] = [];
@@ -104,7 +105,7 @@ export class Game {
   // ---- step / diff ----------------------------------------------------------
   setStep(step: number, instant = false): void {
     step = clamp(step, 0, STEPS - 1);
-    if (step === this.step) return;
+    if (!this.W || step === this.step) return; // not initialised yet, or nothing to do
     const prev = this.step;
     const E = epochOf(step), jump = prev >= 0 && epochOf(prev) !== E;
     if (prev < 0) instant = true;
@@ -116,18 +117,24 @@ export class Game {
     this.roadSet = new Set(plan.roads); this.freeSet = new Set(plan.free);
     this.water = [];
     let built = 0;
+    // the reskin wave crosses the larger of the two cities, so going back to epoch 1 does not take 25 s to dissolve
+    const jumpR = RING[Math.max(E, prev >= 0 ? epochOf(prev) : E) - 1];
     for (const i of this.W.order) {
       const t = this.W.tiles[i]!;
       const fresh = t.zone === step && prev < step;
       const inner = RING[E - 2] ?? 0;
-      const delay = instant ? 0 : jump ? (t.dist / RING[E - 1]) * 1.5 : fresh ? 0.1 + clamp((t.dist - inner) / (RING[E - 1] - inner), 0, 1) * 0.7 + t.h2 * 0.35 : t.h2 * 0.55;
+      const delay = instant ? 0 : jump ? (t.dist / jumpR) * 1.5 : fresh ? 0.1 + clamp((t.dist - inner) / (RING[E - 1] - inner), 0, 1) * 0.7 + t.h2 * 0.35 : t.h2 * 0.55;
       // ground
       const gid = plan.ground[i];
       if (gid.startsWith('water')) this.water.push(i);
       if (gid !== this.gId[i]) {
         this.gId[i] = gid;
         const seq = ++this.gSeq[i], s = this.gSpr[i]!, by = (t.x + t.y + 1) * TH;
-        const swap = () => { const d = this.reg.get(gid); s.texture = d.tex; s.anchor.set(d.ax / d.w, d.ay / d.h); };
+        const swap = () => {
+          const d = this.reg.get(gid), g = groupOf(gid), old = this.gGrp[i];
+          s.texture = d.tex; s.anchor.set(d.ax / d.w, d.ay / d.h);
+          this.gGrp[i] = g; this.hold(g, 1); this.hold(old, -1);
+        };
         if (instant) { swap(); s.y = by; }
         else this.anims.push({ delay, dur: 0.28, t: 0, start: () => { if (this.gSeq[i] === seq) swap(); }, update: (p) => { if (this.gSeq[i] === seq) s.y = by - Math.sin(p * Math.PI) * 3; } });
       }
@@ -148,8 +155,7 @@ export class Game {
     }
     if (instant || retint) for (const i of this.W.order) this.tintTile(i);
     if (jump && !instant) this.ripple = { t: 0, max: RING[E - 1] + 3, color: EPOCH_META[E - 1].accent };
-    clearTimeout(this.evictT);
-    this.evictT = window.setTimeout(() => { if (!this.destroyed) this.reg.evict(new Set([epochOf(this.step), epochOf(this.step) + 1])); }, 7000);
+    this.sweep();
     this.updateBodies(E, zoneOf(step), instant);
     this.setCamera(instant);
     this.spawnMovers(E);
@@ -157,6 +163,21 @@ export class Game {
     // warm the next epoch's sprites so the jump is instant
     if (E < 10) setTimeout(() => { if (!this.destroyed) this.reg.ensure(E + 1); }, 900);
   }
+
+  /**
+   * Free the textures of every epoch that is not on screen. Runs on each step, not on an idle timer:
+   * autoplay never idles, and fourteen epochs of atlases held at once exhaust GPU memory.
+   * An epoch that was left stays until its last sprite has animated out, however long that takes
+   * (the ticker is paused off screen, and a restart from the peak dissolves the city over many seconds).
+   */
+  private sweep(): void {
+    if (this.destroyed || this.step < 0) return;
+    const E = epochOf(this.step), keep = new Set([E, E + 1]);
+    this.use.forEach((n, g) => { if (n > 0) keep.add(g); });
+    this.reg.evict(keep);
+  }
+  /** Count a sprite using (n = 1) or releasing (n = -1) a texture of epoch group g; the shared group 0 is never freed. */
+  private hold(g: number, n: number): void { if (g && (this.use[g] += n) === 0) this.sweep(); }
 
   private tintOf(i: number): number {
     const f = this.fog[i], a = this.amb, d = DISTRICT_TINT[this.W.tiles[i]!.dt], s = this.dS * (1 - f);
@@ -172,6 +193,7 @@ export class Game {
   private addObj(t: Tile, id: string, n: number, delay: number, jump: boolean): void {
     const def = this.reg.get(id);
     const spr = new Sprite(def.tex);
+    this.hold(groupOf(id), 1);
     spr.anchor.set(def.ax / def.w, def.ay / def.h);
     const nat = id.charCodeAt(0) !== 101;
     const jx = nat ? Math.round((t.h3 - 0.5) * 8) : 0, jy = nat ? Math.round((t.h4 - 0.5) * 4) : 0;
@@ -217,7 +239,7 @@ export class Game {
     o.dead = true;
     this.emitters.delete(o);
     if (this.objs.get(o.idx) === o) this.objs.delete(o.idx);
-    const kill = () => { o.spr.destroy(); o.light?.destroy(); };
+    const kill = () => { o.spr.destroy(); o.light?.destroy(); this.hold(groupOf(o.id), -1); };
     if (!o.shown || delay < 0) { kill(); return; }
     this.anims.push({ delay, dur: 0.16, t: 0, update: (p) => { o.spr.scale.y = 1 - p; o.spr.alpha = 1 - p * 0.6; if (o.light) { o.light.scale.y = 1 - p; o.light.alpha *= 1 - p; } }, end: kill });
   }
