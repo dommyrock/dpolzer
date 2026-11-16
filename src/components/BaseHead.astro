@@ -17,7 +17,7 @@ const { title, description, image = '/thumb.jpg' } = Astro.props;
 // Google only reads WebSite site-name markup from the domain root, so the
 // structured data below is emitted on the home page only. Without it Search
 // falls back to the registrable domain (pages.dev) and labels the result
-// "Cloudflare" instead of "D.Polzer".
+// "Cloudflare" instead of "Dominik Polzer".
 const isHome = Astro.url.pathname === '/';
 const siteUrl = Astro.site?.href ?? '/';
 ---
@@ -76,7 +76,7 @@ const siteUrl = Astro.site?.href ?? '/';
 				'@context': 'https://schema.org',
 				'@type': 'WebSite',
 				name: SITE_TITLE,
-				alternateName: ['Dominik Polzer', 'dominik.polzer'],
+				alternateName: ['D.Polzer', 'dpolzer'],
 				url: siteUrl,
 			})}
 		/>
