@@ -1,0 +1,37 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import { SITE_TITLE } from "../consts";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import HelixBand from "../components/HelixBand.astro";
+
+// Cloudflare Pages serves this with a 404 status for unknown paths. Without a
+// 404.html it treats the site as an SPA and answers every unknown URL with the
+// home page and a 200, which Google reports as soft 404s / duplicate content.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`Page not found | ${SITE_TITLE}`} description="This page does not exist." noindex />
+  </head>
+  <body class="bg-dommy-black">
+    <Header />
+    <section class="helix-host relative overflow-hidden border-b border-[var(--border-soft)]">
+      <HelixBand seed="/404" />
+      <div class="relative mx-auto w-[880px] max-w-[calc(100%-2.5rem)] pb-10 pt-14 sm:pb-12 sm:pt-20">
+        <div class="mb-4 font-mono text-xs text-[var(--teal)]">~/404</div>
+        <h1 class="m-0 font-display text-[clamp(1.9rem,1.3rem+2.2vw,2.75rem)] font-semibold leading-[1.15] text-[var(--text-strong)]">
+          Page not found
+        </h1>
+      </div>
+    </section>
+    <main class="m-0 w-full max-w-none px-0 pb-12 pt-10 sm:pt-12">
+      <p class="mx-auto w-[880px] max-w-[calc(100%-2.5rem)] text-[var(--text)]">
+        Nothing lives at this address. Go to the <a class="text-[var(--teal)] underline" href="/">home page</a> or
+        browse the <a class="text-[var(--teal)] underline" href="/blog/">posts</a>.
+      </p>
+    </main>
+    <Footer />
+  </body>
+</html>
