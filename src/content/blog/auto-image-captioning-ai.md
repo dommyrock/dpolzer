@@ -1,6 +1,6 @@
 ---
 title: 'Auto image captioning with AI models'
-description: 'Ecploration of AI image captioning models'
+description: "Captioning an image dataset with Salesforce BLIP and Microsoft Florence-2 on Hugging Face, and what Florence's <loc_N> grounding tokens mean and how to strip them."
 pubDate: 'Nov 19 2024'
 heroImage: '/HF_hub_dataset_created.webp'
 ---

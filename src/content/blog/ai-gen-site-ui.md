@@ -1,6 +1,6 @@
 ---
-title: 'AI Generating Site UI-s '
-description: 'AI Generating Site UI-s'
+title: 'Generating site UI with AI'
+description: "How I used Vercel's v0.dev to generate Tailwind UI for this blog, then built the site skeleton in Astro in one day: routing, prefetching, caching and Cloudflare Pages hosting."
 pubDate: 'Oct 22 2024'
 heroImage: '/v0_prompt_2_out.webp'
 ---

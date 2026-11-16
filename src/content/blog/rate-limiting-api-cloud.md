@@ -1,6 +1,6 @@
 ---
 title: "Rate limiting API's in the Cloud"
-description: "Blog post about Rate limiting API's in the Cloud"
+description: "A post on dev.to about rate limiting calls to third-party APIs from services running in the cloud."
 pubDate: "Jun 12 2022"
 heroImage: "/blog-placeholder-3.jpg"
 ---
