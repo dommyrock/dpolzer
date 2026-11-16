@@ -1,6 +1,6 @@
 ---
 title: 'Old personal site'
-description: 'Older personal site that showcased my personal projects '
+description: "My earlier personal site, hosted on Vercel, which showcased my side projects before this one replaced it."
 pubDate: 'Jan 01 2021'
 heroImage: '/old-personal-site.webp'
 ---

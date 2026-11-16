@@ -1,6 +1,6 @@
 ---
 title: "Directory relationship linker GUI"
-description: "Rust based Directory relationship linker GUI project"
+description: "A desktop GUI written in Rust that watches a directory and links the relationships between its files as a graph. The source code is on GitHub."
 pubDate: "Dec 12 2022"
 heroImage: "/blog-placeholder-3.jpg"
 ---

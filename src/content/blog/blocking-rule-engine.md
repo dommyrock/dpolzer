@@ -1,6 +1,6 @@
 ---
 title: 'Blocking Rule Engine'
-description: 'Blocking rule engine development overview'
+description: "Designing a configurable blocking rule engine in C# for shift bookings: one abstraction over functional and OOP APIs, custom GraphQL errors, and rules such as exhaustion and side-job prevention."
 pubDate: 'Oct 12 2024'
 heroImage: '/BlockingRules_v2.svg'
 ---

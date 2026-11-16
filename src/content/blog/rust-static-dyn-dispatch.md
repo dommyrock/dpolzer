@@ -1,6 +1,6 @@
 ---
 title: 'Rust static & dyn dispatch'
-description: 'Exploration of Rust static & dynamic dispatch desing patterns.'
+description: "Rust trait design patterns: trait bounds and where clauses, Fn traits, static vs dynamic dispatch with trait objects, vtable layout, the newtype pattern and higher-rank trait bounds."
 pubDate: 'Oct 01 2024'
 heroImage: '/blog-placeholder-4.jpg'
 ---
