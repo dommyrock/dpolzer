@@ -1,0 +1,285 @@
+---
+title: 'Rebuilding downtown Vice City in 3D from one helicopter flyover video'
+description: 'A one-day Gaussian splatting spike: YouTube footage → COLMAP → SAM 2 masks → Brush → a 3 MB splat you can fly through in the browser. What worked, what broke, why each tool, and what a fully explorable 3D map would actually need.'
+pubDate: 'Nov 22 2026'
+heroImage: '/splat-flyover-hero.webp'
+liveUrl: '/splat-flyover/'
+---
+
+import SplatFlyover from '../../components/SplatFlyover.astro';
+import CompareTabs from '../../components/CompareTabs.astro';
+import SplatPipeline from '../../components/SplatPipeline.astro';
+import EpochsBudget from '../../components/EpochsBudget.astro';
+
+[Code, scripts and full notes on GitHub →](https://github.com/dommyrock/gaussian-splat-flyover-research)
+
+After building [VI-map](/blog/vi-map/), a 2D fan map of Leonida, I wanted a 3D aerial view next to it: something you could pan, rotate and fly through. GTA VI had been out for three days, and someone had already uploaded the perfect source: **one continuous, uncut helicopter flight across the whole map** at 1440p60 on a PS5 Pro.
+
+So the question for a one-day spike was simple: **can you rebuild GTA VI's downtown in 3D from a single YouTube flyover, on a laptop, for $0?**
+
+The short answer is below. It's a real 3D scene, not a video. It's rendered live in your browser from 162,914 Gaussians that were trained on 5 seconds of that footage:
+
+<SplatFlyover />
+
+The pipeline works, and views near the flight path look like the game (**27.2 dB PSNR** on frames the model never saw). But one forward camera pass can't give you a scene you can explore freely: the far sides of buildings were never filmed. That's why the controls above keep you close to the real camera path. The rest of this post covers how it's built, why each tool was picked, what failed, and what it would take to turn this into a fully explorable 3D map.
+
+## What you're looking at
+
+The embed above was trained only on the stretch from 2:54.5 to 2:59.5 of the video: over the freeway interchange towards the tan tower and the monorail. That's about 290 m of flight at ≈ 210 km/h and 91 m altitude.
+
+<CompareTabs items={[
+  { label: 'Real frame', src: '/splat-flyover/img/clip-real.webp', alt: 'Original video frame with HUD and helicopter', note: 'One of the 60 training frames, straight from the video: HUD, minimap, the helicopter and its rotor all in view.' },
+  { label: 'Splat render', src: '/splat-flyover/img/clip-render.webp', alt: 'The same view rendered from the Gaussian splat', note: 'The same camera pose rendered from the splat in the browser. The helicopter and HUD are gone, because they were masked out of training: the splat only learns the city behind them.' },
+]} />
+
+| | |
+| --- | --- |
+| Footage | 5 s → 60 sharpest frames at 1920×1080 |
+| Camera poses | 60/60 registered by COLMAP, 0.39 px mean reprojection error |
+| Training | Brush, 20,000 steps, ≈ 20 min on an Apple M5 Pro |
+| Model | 162,914 Gaussians: 37 MB `.ply` → **3.0 MB `.spz`** |
+| Renderer | three.js + Spark, in an iframe that loads when you scroll to it |
+
+## Gaussian splatting in one paragraph
+
+A Gaussian splat is a 3D scene made of soft, coloured, semi-transparent ellipsoids instead of triangles. Each one has a position, a size along three axes, a rotation, an opacity and a colour that changes with the viewing angle (spherical harmonics). Draw hundreds of thousands of them, sorted back to front and blended, and you get a photoreal image from any viewpoint *near* the ones you trained on. Training is plain gradient descent: render the splat from a known camera, compare it with the real photo, nudge every Gaussian that contributed, repeat. So the whole problem comes down to three questions:
+
+1. **Where was the camera** for every frame? (Structure-from-Motion)
+2. **What does the world look like** from there? (Training)
+3. **How do you show it?** (A real-time splat renderer)
+
+## The pipeline
+
+The full spike covered 74 seconds of flight (2:30–3:44, ≈ 4.4 km over downtown and the bay). Here's every step with its tool and its measured cost on an M5 Pro with 64 GB:
+
+<SplatPipeline steps={[
+  { name: 'Download only the segment', tool: 'yt-dlp --download-sections', out: '74 s, 1440p60 VP9, 120 MB', time: '~1.5 min' },
+  { name: 'Pick sharp frames', tool: 'ffmpeg + OpenCV (Laplacian variance)', out: '896 candidates at 12 fps → 200 frames at 1080p', time: '12 s' },
+  { name: 'Mask HUD and helicopter', tool: 'OpenCV boxes → SAM 2.1 video tracking', out: 'Per-frame ignore masks, 0 frames lost', time: '1–2 min' },
+  { name: 'Camera poses', tool: 'COLMAP 4.2 (sequential matcher + global mapper)', out: '200/200 cameras, 78,389 points, 0.43 px', time: '2.5 min' },
+  { name: 'Train the splat', tool: 'Brush 0.3 (Rust, wgpu on Metal)', out: '1,527,578 Gaussians, 361 MB .ply', time: '46 min' },
+  { name: 'Evaluate', tool: 'Brush eval renders + headless Chrome + PSNR/SSIM', out: '27.2 dB on 20 held-out frames', time: '~1 min' },
+  { name: 'Compress for the web', tool: 'splat-transform → SPZ', out: '5 s clip: 37 MB → 3.0 MB', time: 'seconds' },
+  { name: 'Render in the browser', tool: 'three.js + Spark', out: 'This page', time: '—' },
+]} />
+
+Everything before training takes **under 3 minutes of compute**. Training dominates, and its cost depends on the number of steps, not on clip length: every step renders one full 1080p frame. That's why the 5 s clip above still took ≈ 20 minutes for 20k steps.
+
+## Step by step, and why each tool
+
+### 1. Footage: download only what you need
+
+`yt-dlp -f 308 --download-sections "*150-220"` fetches 70 seconds of the 1440p60 VP9 stream instead of the full 8:48 video. I used 1440p rather than 1080p for a practical reason: YouTube's compression smears fine texture, and Structure-from-Motion lives on fine texture. The extra resolution survives the downscale to 1080p frames better than a native 1080p stream does.
+
+The flight timeline mattered too. The video has haze and storms around 0:30–2:00 and 5:15–6:40, and the last 1.5 minutes is a landing where the helicopter fills the frame. **3:00–3:40, the low pass between the downtown towers**, has the best parallax, so that's where the spike went.
+
+### 2. Frames: sharpest, not most
+
+`ffmpeg` extracts candidates at 12 fps, then a small OpenCV script scores each one by the **variance of the Laplacian** (a standard blur metric), computed only on unmasked pixels. It splits the candidates into 200 equal windows and keeps the sharpest frame in each. Motion blur is poison for both feature matching and training, and at 210 km/h some frames are badly blurred. Picking per window keeps the spacing even (≈ 21 m between frames), which COLMAP's sequential matcher relies on.
+
+### 3. Camera poses: COLMAP
+
+[COLMAP](https://github.com/colmap/colmap) is the standard open-source Structure-from-Motion tool. It finds SIFT features, matches them across images, solves for every camera's position and lens, triangulates sparse 3D points, and refines everything together with bundle adjustment. It doesn't create the splat. It provides the poses and seed points that make training possible.
+
+Why these settings:
+- **Sequential matcher, overlap 15**: video frames arrive in order, so each frame only needs matching against its neighbours. That's far cheaper than exhaustive matching, and it's correct for a single pass.
+- **Global mapper** (formerly GLOMAP, now built into COLMAP 4): solves all cameras at once instead of adding them one by one. It's faster and less prone to drift on long sequences.
+- **One shared camera** (`single_camera 1`, `SIMPLE_RADIAL`): the game camera's lens never changes, so solving one set of intrinsics is more stable than 200.
+- **Masks for COLMAP too** (black = ignore): otherwise the static HUD and the helicopter, which never move on screen, produce perfect, wrong matches.
+
+Result: **200/200 frames registered, 78,389 points, 0.43 px mean reprojection error.** Game graphics are full of texture and have no rolling shutter or lens noise, so COLMAP had an easy job. It was the one step that just worked first time.
+
+### 4. Masks: the step that decided quality
+
+Training compares renders with real frames pixel by pixel. Anything that isn't part of the city has to be excluded from that comparison: the GameV watermark, the wanted-level stars, the minimap and altimeter, the "DEPLOY LANDING GEAR" prompt, and above all **the helicopter**, which sits in the middle of every frame. [Brush](https://github.com/ArthurBrussee/brush) reads a `masks/` folder in which white means "use this pixel" and black means "ignore it".
+
+**v1 used a fixed circle** over the helicopter (it banks up to 45°, so a box wouldn't cover it). The result looked great on the skyline and terrible in the middle:
+
+<CompareTabs items={[
+  { label: 'Real footage', src: '/splat-flyover/img/cmp-real.webp', alt: 'Original frame 63 with the helicopter in the centre', note: 'Frame 63 of the video. The chase cam keeps the helicopter in the same spot on screen for the entire flight.' },
+  { label: 'v1: circle mask', src: '/splat-flyover/img/cmp-v1.webp', alt: 'v1 render with a streaky smear in the centre and dark shards', note: 'v1 (24.6 dB held-out). The circle hid the same screen area in every frame, so the ground ahead of and below the helicopter was never seen. Training filled it with stretched guesses: the streaky smear. The rotor blades reached past the circle and got baked in as dark floating shards.' },
+  { label: 'v2: SAM 2 mask', src: '/splat-flyover/img/cmp-v2.webp', alt: 'v2 render with a clean centre and freeways', note: 'v2 (27.2 dB held-out, +2.7 dB). A tight, tracked mask covers only the helicopter and its rotor sweep, 28% of the old circle\'s area, so the ground under the flight path gets trained. Same poses, same training settings: only the masks changed.' },
+]} caption="Frame 63, same viewpoint. Click the tabs to compare." />
+
+Two things that **didn't** work first:
+
+- **Pruning the trained splat** (deleting near-camera, faint, needle-shaped and huge Gaussians). It made things worse: the ground went see-through, even when 74% of the Gaussians were kept. Under-observed surfaces are built from *many faint stacked splats*, so deleting the faint ones deletes the surface. **You can't prune your way out of missing data.**
+- **"Static pixel" masks**: the helicopter barely moves on screen while the city flows past, so mark pixels that stay the same. But frames 0.3 s apart let the helicopter shift and bank too much, and the flat sky reads as static too.
+
+![Failed static-pixel masks (red) mostly miss the helicopter, mark random patches of city instead, and find nothing at all in some frames; the yellow ellipse is the v1 circle](/splat-flyover/img/static-pixel-fail.webp)
+
+*The static-pixel attempt (red): it mostly missed the helicopter, marked random patches of city instead, and found nothing in frames 30 and 190. Yellow is the v1 circle.*
+
+What worked was real object segmentation. [SAM 2](https://github.com/facebookresearch/sam2) (Meta's Segment Anything 2.1, base+ checkpoint, run on the Mac's GPU through PyTorch MPS) takes **one box and two points on frame 0** and tracks the object through the whole video. A blurred rotor disc is nearly invisible to a segmenter, so the script adds a geometric band: a thin, nearly level ellipse at the top of the tracked body, with its tilt clamped to ±15°. Then it dilates everything by about 10 px. All 200 frames were tracked, with 0 lost.
+
+<CompareTabs items={[
+  { label: 'v1: circle', src: '/splat-flyover/img/masks-v1.webp', alt: 'v1 circle masks overlaid on six frames' },
+  { label: 'v2: SAM 2 + rotor band', src: '/splat-flyover/img/masks-v2.webp', alt: 'v2 SAM 2 masks overlaid on six frames' },
+]} caption="Masks in red, overlaid on six frames across the flight. Always check an overlay like this before training: it caught a coordinate-scale bug and leaking rotor tips here." />
+
+The lesson: **the fix had to happen in the data, not after training.** v2 also grew 29% more Gaussians (1.19M → 1.53M), because the ground that the circle used to hide now got real detail instead of guesses.
+
+### 5. Training: Brush on Metal
+
+The obvious trainer, [gsplat](https://github.com/nerfstudio-project/gsplat), is PyTorch plus custom CUDA kernels, and a Mac has no CUDA. [Brush](https://github.com/ArthurBrussee/brush) is written in Rust on the Burn ML framework and runs on [wgpu](https://github.com/gfx-rs/wgpu): one binary for Metal, Vulkan, DirectX and even the browser. On Apple Silicon it's the natural choice. On NVIDIA it leaves speed unused, because it has no CUDA-specific kernels.
+
+How a run unfolds:
+- **Start**: one Gaussian per COLMAP point (78k).
+- **Densify**: Gaussians with large errors are cloned (small ones in under-detailed areas) or split (big blurry ones). Nearly transparent or huge strays get pruned.
+- **Growth stops** at about 20k steps. The remaining steps only refine.
+
+| Snapshot | Gaussians | `.ply` size |
+| --- | --- | --- |
+| v1 at 10k (circle masks) | 698,705 | 165 MB |
+| v1 at 30k | 1,187,446 | 280 MB |
+| v2 at 10k (SAM 2 masks) | 859,142 | 203 MB |
+| **v2 at 30k** | **1,527,578** | **361 MB** |
+
+Each Gaussian takes 59 floats = **236 bytes** in a `.ply`, and 48 of those floats are colour (degree-3 spherical harmonics). That's why compression mostly targets colour.
+
+Two practical traps: run training under `nohup` (a closed terminal killed my first run at 10k steps), and know that Brush 0.3 **can't resume** from a `.ply`, so a crash means starting over.
+
+### 6. Measure before you blame the training
+
+I held out every 10th frame (20 frames) and scored renders against the real frames with PSNR and SSIM, ignoring masked pixels. Then I rendered the same frames two ways: with Brush itself, and with [Spark](https://github.com/sparkjsdev/spark), the three.js splat renderer I used for the web viewer.
+
+| Renderer | PSNR (min–max) | SSIM |
+| --- | --- | --- |
+| Brush (reference) | **27.2 dB** (22.2–32.7) | 0.878 |
+| Spark, tuned | 23.7 dB (20.2–26.7) | 0.843 |
+| Spark, defaults | 19.0 dB (13.6–22.0) | 0.781 |
+
+For scale: 25–30 dB on held-out views is a good splat, and under 20 dB is visibly wrong. **The splat was fine. The viewer was losing 8 dB.** Spark's `maxPixelRadius` defaults to 512 px and silently clips the huge Gaussians that make up the sky and distant background. Setting it to 4096 alone took the viewer from 18.5 to 23.7 dB.
+
+![Before: v1 masks + Spark defaults. After: v2 SAM 2 masks + maxPixelRadius 4096](/splat-flyover/img/viewer-fix.webp)
+
+![Real frames vs Brush renders vs Spark renders on held-out views](/splat-flyover/img/real-brush-spark.webp)
+
+The 5-second clip at the top of this post hit a cousin of this bug. On a light-blue background the ground looked foggy and washed out. Brush trains against **black**, so thin areas (ground seen at a grazing angle, the edges of coverage) end up partly transparent and rely on black showing through. On black the render matches the footage. Lesson: render the viewer's background the way the trainer did.
+
+### 7. Packaging 5 seconds for a blog post
+
+Shipping the whole 361 MB scene to a blog post was never an option, and cutting a box out of it would have wasted most of its detail. Instead I retrained on **just 5 seconds**: 60 frames picked at 24 fps, a fresh SAM 2 track (it also caught a new HUD prompt the old masks missed), COLMAP (60/60 cameras, 0.39 px) and Brush capped at 600k splats (`--max-splats 600000`; it settled at 162,914).
+
+Then [splat-transform](https://github.com/playcanvas/splat-transform) converts it to [SPZ](https://github.com/nianticlabs/spz), Niantic's compressed splat format:
+
+```bash
+splat-transform --spz-version 3 clip_20000.ply -H 1 clip.spz   # 37 MB → 3.0 MB
+```
+
+- `-H 1` drops the spherical-harmonic bands above degree 1. With full degree 3 it's 4.0 MB, and I couldn't tell the two apart in side-by-side renders.
+- `--spz-version 3`: splat-transform writes SPZ v4 by default, which Spark 2.3 rejects with "Invalid gzip header".
+
+What a reader downloads, measured:
+
+<EpochsBudget rows={[
+  { label: 'Splat (.spz)', kb: 3072, note: '162,914 Gaussians, SH degree 1, SPZ v3' },
+  { label: 'Spark', kb: 916, note: 'Splat renderer for three.js, gzipped, from jsDelivr' },
+  { label: 'three.js', kb: 408, note: 'Core + module build, gzipped, from jsDelivr' },
+  { label: 'Poster + poses', kb: 103, note: 'Shown instantly; the 60 real camera poses the viewer flies along' },
+]} />
+
+That's about **4.5 MB**, and none of it loads until the embed is within 300 px of the screen. The viewer itself is under 200 lines and does three things:
+- **Flies the real path.** It interpolates between the 60 COLMAP poses (lerp for position, slerp for rotation).
+- **Clamps the free look** to ±20° sideways and ±10° vertically, plus a small sideways drift. At ±30° the edges already showed dark streaks.
+- **Pauses rendering** whenever it's off screen.
+
+## Where it breaks
+
+Off-path renders from the full scene tell the real story. 20–50 m to the side of the path or 50 m above it, everything holds up. Turn 30° and the edges smear. Look back 45° and it falls apart, because **no frame ever saw that**.
+
+![Off-path renders, v1 (top) vs v2 (bottom): on path, 50 m right, 50 m up, yaw +30°, yaw −45°](/splat-flyover/img/offpath.webp)
+
+| Offset from the flight path | Result |
+| --- | --- |
+| 20–50 m left/right | ✅ Skyline and towers hold up |
+| 50 m up | ✅ Some ground softness |
+| Turn +30° (towards the filmed side) | ⚠️ Mostly fine, edges smear |
+| Turn −45° / look back | ❌ Streaks: never filmed |
+| Sky | ❌ Floaters and haze (no parallax, unmasked) |
+
+That's not a bug to fix. It's the limit of the input. **Reconstruction quality is decided at capture time.**
+
+## What a fully explorable 3D map would need
+
+The original plan went from this spike (Phase 0) through posing the whole flight, training segments, aligning them to the 2D map and shipping a streamed 3D view. Phase 0 met every exit criterion, but the off-path limits meant the next phases would only produce a longer corridor with the same blind spots. So I stopped there. This is what the full version would take.
+
+### 1. Different footage
+
+| Capture pattern | What it adds |
+| --- | --- |
+| **Orbits** around each landmark (360°, 2 altitudes, aimed at the centre) | Every facade from many angles. The most important one for buildings |
+| **Lawnmower grid** (parallel passes, 60–70% side overlap, camera ~45° down) | Even coverage of ground and rooftops |
+| **Cross-hatch** (the grid again, rotated 90°) | Facades from both directions |
+| Several altitudes (~50 / 100 / 200 m) | Close-up detail plus context; helps registration |
+| Slower flight | Sharper frames and more overlap. 210 km/h meant ≈ 21 m between sampled frames |
+
+Plus: **HUD off, no vehicle in frame** (photo mode or a cockpit camera), fixed time of day, clear weather, no motion blur or depth of field, and the highest-bitrate local recording rather than a YouTube re-encode. Recording your own flight also removes the third-party rights question.
+
+### 2. Different processing
+
+- **Matching**: orbits revisit places, so switch COLMAP from the sequential matcher to the **exhaustive or vocabulary-tree** matcher.
+- **Segments**: split the flight by area (one orbit or grid tile each), pose and train each one separately, then align and merge. For segments COLMAP can't pose (open water, haze), use learned pose estimators such as **VGGT** or **Depth Anything 3** as a fallback.
+- **Appearance embeddings**: lighting and weather drift across a 7-minute flight. gsplat can learn a per-image appearance code so storms don't bake into the geometry.
+- **Sky**: mask it, or train with alpha. Brush's ignore-masks would otherwise leave sky floaters unpenalised.
+
+### 3. Different compute
+
+The full flight is ≈ 20–23 km of corridor: roughly **7–8M Gaussians and 1.7–1.9 GB of raw `.ply`** at the density measured here. Training would move from Brush on the Mac to **gsplat on an NVIDIA GPU**:
+
+| | Mac M5 Pro (Brush) | Colab A100/H100 (gsplat, estimated) |
+| --- | --- | --- |
+| One ~200-frame segment, 30k steps | 37–46 min (measured) | ~8–15 min |
+| Full flight, 6–10 segments | ~4–6 h | ~1.5–2 h |
+| Cost | $0 | a few dollars of compute units |
+
+The official [Colab MCP](https://github.com/googlecolab/colab-mcp) can drive a notebook from a local coding agent, with one catch: the browser tab must stay open. Frames, masks and COLMAP stay local, since they take minutes. Only training goes up.
+
+### 4. Cleanup, alignment and delivery
+
+- **[SuperSplat](https://github.com/playcanvas/supersplat)**: hand-delete floaters and crop each segment. Automated pruning failed here, so this step stays manual.
+- **Alignment to the 2D map**: read the minimap in each frame for a rough 2D track, add 8–15 landmarks (stadium, bridges, runway), fit a similarity transform, and warp the map's points of interest rather than the splat.
+- **Streaming**: level-of-detail chunks plus a manifest instead of one file, hosted outside the git repo (Cloudflare R2 or Hugging Face). The targets are under 3 s to first render and 30+ fps on a recent iPhone.
+
+### Or: skip splats for the whole-map view
+
+A splat is not a mesh: it has no triangles or UVs, and Blender can't edit it natively. For full-map coverage, a **stylized mesh** is the realistic route. Texture a ground plane with the illustrated map, extrude buildings using heights from the SfM points, and export one `.glb` through [Blender](https://github.com/blender/blender) and [glTF-Transform](https://github.com/donmccurdy/glTF-Transform), then render it with three.js or [react-three-fiber](https://github.com/pmndrs/react-three-fiber). It's small, fast on phones and needs no footage rights. Splats stay the right tool for the photoreal "fly the real path" moments, like the one above.
+
+## The ecosystem
+
+| Tool | Role | Why / when | Used |
+| --- | --- | --- | --- |
+| [COLMAP](https://github.com/colmap/colmap) | Structure-from-Motion: poses + sparse points | The standard; sequential matcher for video, global mapper for speed | ✅ |
+| [SAM 2](https://github.com/facebookresearch/sam2) | Video object segmentation | One prompt, tracked through every frame; runs on MPS | ✅ |
+| [Brush](https://github.com/ArthurBrussee/brush) | Splat trainer (Rust, wgpu) | The trainer that runs natively on a Mac's GPU | ✅ |
+| [Spark](https://github.com/sparkjsdev/spark) | three.js splat renderer | Drops into a three.js scene; reads `.ply`/`.spz` | ✅ |
+| [splat-transform](https://github.com/playcanvas/splat-transform) | Convert, filter, compress | `.ply` → `.spz`/`.sog`, strip SH bands, crop, decimate | ✅ |
+| [SPZ](https://github.com/nianticlabs/spz) | Compressed splat format | ~10× smaller than `.ply` | ✅ |
+| [gsplat](https://github.com/nerfstudio-project/gsplat) | CUDA trainer | NVIDIA speed, MCMC densification, appearance embeddings, multi-GPU | Next |
+| [SuperSplat](https://github.com/playcanvas/supersplat) | Splat editor | Manual floater cleanup and cropping | Next |
+| VGGT / Depth Anything 3 | Learned poses and depth | Fallback where COLMAP fails; seconds instead of minutes | Maybe |
+| [Blender](https://github.com/blender/blender) + [glTF-Transform](https://github.com/donmccurdy/glTF-Transform) | Mesh authoring + `.glb` optimisation | For the stylized whole-map route | Later |
+| [react-three-fiber](https://github.com/pmndrs/react-three-fiber) | React renderer for three.js | If the 3D view moves into the VI-map app | Later |
+
+## Numbers
+
+| | |
+| --- | --- |
+| Full spike | 74 s of footage, ≈ 4.4 km corridor, 200 frames |
+| Poses | 200/200, 78,389 points, 0.43 px |
+| Final full splat | 1,527,578 Gaussians, 361 MB `.ply` |
+| Held-out quality | 27.2 dB PSNR / 0.878 SSIM (v1 with the circle mask: 24.6 dB) |
+| GPU time, whole spike | ≈ 1.6 h on an M5 Pro, $0 |
+| This page's clip | 5 s, 60 frames, 162,914 Gaussians, 3.0 MB, ≈ 35 min end to end |
+| Rule of thumb (dense downtown) | ≈ 350k Gaussians and ≈ 80 MB raw `.ply` per km of corridor |
+
+## Read more
+
+Everything is in the [research repo](https://github.com/dommyrock/gaussian-splat-flyover-research):
+- [Knowledge base](https://github.com/dommyrock/gaussian-splat-flyover-research/blob/main/docs/knowledge-base.md): concepts as Q&A, the full propeller-problem write-up, evaluation method.
+- [Pipeline runbook](https://github.com/dommyrock/gaussian-splat-flyover-research/blob/main/docs/pipeline-runbook.md): every command, with timings.
+- [Results and sizes](https://github.com/dommyrock/gaussian-splat-flyover-research/blob/main/docs/results-and-sizes.md) and [scaling and tooling](https://github.com/dommyrock/gaussian-splat-flyover-research/blob/main/docs/scaling-and-tooling.md).
+- [Next capture guide](https://github.com/dommyrock/gaussian-splat-flyover-research/blob/main/docs/next-capture-guide.md): how to film footage that gives an explorable scene.
+- [The web clip](https://github.com/dommyrock/gaussian-splat-flyover-research/tree/main/media/splat-clip): the `.spz`, the viewer and how it was made. The [full-screen viewer](/splat-flyover/) is also hosted on this site.
+
+*Source footage: "How BIG Is the GTA 6 Map? I Flew Across It in a Helicopter!" by GameV on YouTube (2:30–3:44), PS5 Pro gameplay. Grand Theft Auto VI is © Rockstar Games. Frames, renders and the 5-second splat are derived from that footage and shared for non-commercial research and commentary.*
