@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Downtown Flyover Splat</title>
+<style>
+  :root { --bg: #000; --panel: rgba(12, 14, 20, 0.72); --text: #e8ebf2; --muted: #9aa3b5; --accent: #e3168c; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, sans-serif; overflow: hidden; }
+  #stage { position: absolute; inset: 0; touch-action: pan-y; cursor: grab; }  /* vertical swipes still scroll the host page */
+  #stage:active { cursor: grabbing; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  #poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .6s; pointer-events: none; }
+  #poster.gone { opacity: 0; }
+  #ui { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 10px; align-items: center;
+        background: var(--panel); padding: 6px 10px; border-radius: 8px; backdrop-filter: blur(6px); }
+  button { background: none; color: var(--text); border: 0; padding: 2px 4px; cursor: pointer; font: inherit; font-size: 15px; line-height: 1; }
+  input[type=range] { flex: 1; min-width: 80px; accent-color: var(--accent); }
+  #hint { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  #status { position: absolute; top: 8px; left: 10px; color: var(--muted); font-size: 11px; background: var(--panel); padding: 3px 7px; border-radius: 6px; }
+  @media (max-width: 520px) { #hint { display: none; } }
+</style>
+</head>
+<body>
+<div id="stage"><img id="poster" src="poster.jpg" alt="Downtown Vice City from the helicopter, rebuilt as a Gaussian splat" /></div>
+<div id="status">Loading 3D scene…</div>
+<div id="ui">
+  <button id="play" aria-label="Pause">❚❚</button>
+  <input id="scrub" type="range" min="0" max="1" value="0" step="0.001" aria-label="Position along the flight path" />
+  <span id="hint">drag to look · click, then scroll to fly · right-drag to drift</span>
+</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+  "@sparkjsdev/spark": "https://cdn.jsdelivr.net/npm/@sparkjsdev/spark@2.3.1/dist/spark.module.js"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark';
+
+// Tunables. Off-path quality falls off fast for a single forward pass, so keep the limits tight.
+const LOOK_YAW = 20, LOOK_PITCH = 10;   // degrees of free look around the recorded camera direction
+const DRIFT = 0.06;                      // max sideways/vertical drift, as a fraction of the path length
+const SPEED = 0.12;                      // auto-fly speed in path-fractions per second (≈ real-time for a 5 s path is 0.2)
+
+const qp = new URLSearchParams(location.search);
+const base = qp.get('base') || '.';
+const cfg = await (await fetch(`${base}/poses.json`)).json();
+if (/^[0-9a-f]{6}$/i.test(qp.get('accent') || '')) document.documentElement.style.setProperty('--accent', '#' + qp.get('accent'));
+const stage = document.getElementById('stage'), status = document.getElementById('status'), poster = document.getElementById('poster');
+
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+// black, like Brush's training background: thin areas of the splat are partly transparent and were trained against black
+scene.background = new THREE.Color(qp.get('bg') ? '#' + qp.get('bg') : 0x000000);
+// maxPixelRadius 4096: Spark's default (512) clips the large sky/background splats (measured −5 dB)
+scene.add(new SparkRenderer({ renderer, maxPixelRadius: 4096, clipXY: 3 }));
+const camera = new THREE.PerspectiveCamera(cfg.vfov, 16 / 9, 0.01, 1000);
+const up = new THREE.Vector3().fromArray(cfg.up);
+camera.up.copy(up);
+
+const splat = new SplatMesh({ url: `${base}/${qp.get('spz') || 'clip.spz'}` });
+scene.add(splat);
+splat.initialized.then(() => {
+  status.style.display = 'none';
+  requestAnimationFrame(() => requestAnimationFrame(() => poster.classList.add('gone')));
+});
+
+const poses = cfg.poses.map(p => {
+  const m = p.matrix;
+  const basis = new THREE.Matrix4().makeBasis(
+    new THREE.Vector3(m[0], m[1], m[2]), new THREE.Vector3(m[3], m[4], m[5]), new THREE.Vector3(m[6], m[7], m[8]));
+  return { pos: new THREE.Vector3().fromArray(p.position), quat: new THREE.Quaternion().setFromRotationMatrix(basis) };
+});
+let pathLen = 0;
+for (let i = 1; i < poses.length; i++) pathLen += poses[i].pos.distanceTo(poses[i - 1].pos);
+const maxDrift = pathLen * DRIFT;
+
+// state: s = position along path (0..1), look = yaw/pitch offsets (deg), drift = right/up offset (scene units)
+let s = 0, dir = 1, playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+const look = { yaw: 0, pitch: 0 }, drift = { x: 0, y: 0 };
+const scrub = document.getElementById('scrub'), playBtn = document.getElementById('play');
+const setPlaying = v => { playing = v; playBtn.textContent = v ? '❚❚' : '▶'; playBtn.ariaLabel = v ? 'Pause' : 'Play'; };
+setPlaying(playing);
+
+const tmpQ = new THREE.Quaternion(), right = new THREE.Vector3(), camUp = new THREE.Vector3();
+function place() {
+  const x = s * (poses.length - 1), i = Math.min(Math.floor(x), poses.length - 2), f = x - i;
+  camera.position.lerpVectors(poses[i].pos, poses[i + 1].pos, f);
+  camera.quaternion.slerpQuaternions(poses[i].quat, poses[i + 1].quat, f);
+  right.set(1, 0, 0).applyQuaternion(camera.quaternion);
+  camUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+  camera.position.addScaledVector(right, drift.x).addScaledVector(camUp, drift.y);
+  camera.quaternion.premultiply(tmpQ.setFromAxisAngle(up, THREE.MathUtils.degToRad(look.yaw)));
+  camera.rotateX(THREE.MathUtils.degToRad(look.pitch));
+}
+
+// input
+const clamp = (v, a) => Math.max(-a, Math.min(a, v));
+let drag = null, engaged = false;   // wheel only flies after a click inside, so page scrolling passes through
+stage.addEventListener('contextmenu', e => e.preventDefault());
+stage.addEventListener('pointerdown', e => {
+  stage.setPointerCapture(e.pointerId);
+  drag = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey }; engaged = true;
+  setPlaying(false);
+});
+stage.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+  const k = 90 / stage.clientWidth;
+  if (drag.pan) {
+    drift.x = clamp(drift.x - dx * k * maxDrift / 45, maxDrift);
+    drift.y = clamp(drift.y + dy * k * maxDrift / 45, maxDrift);
+  } else {
+    look.yaw = clamp(look.yaw + dx * k, LOOK_YAW);
+    look.pitch = clamp(look.pitch + dy * k, LOOK_PITCH);
+  }
+});
+const endDrag = () => { drag = null; };
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', endDrag);
+stage.addEventListener('pointerleave', () => { if (!drag) engaged = false; });
+stage.addEventListener('wheel', e => {
+  if (!engaged) return;
+  e.preventDefault(); setPlaying(false);
+  s = Math.min(1, Math.max(0, s + e.deltaY * 0.0008));
+}, { passive: false });
+scrub.addEventListener('input', () => { setPlaying(false); s = +scrub.value; });
+playBtn.addEventListener('click', () => setPlaying(!playing));
+addEventListener('keydown', e => {
+  if (e.key === ' ') { setPlaying(!playing); e.preventDefault(); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { setPlaying(false); s = Math.min(1, s + 0.02); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { setPlaying(false); s = Math.max(0, s - 0.02); }
+  if (e.key === 'r') { look.yaw = look.pitch = drift.x = drift.y = 0; }
+});
+
+// size + only render while visible
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage); resize();
+let visible = true;
+new IntersectionObserver(([en]) => { visible = en.isIntersecting; }).observe(stage);
+document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
+
+let last = performance.now();
+renderer.setAnimationLoop(now => {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (!visible) return;
+  if (playing) {   // ping-pong along the path, ease the look offsets back to centre
+    s += dir * dt * SPEED;
+    if (s >= 1) { s = 1; dir = -1; } else if (s <= 0) { s = 0; dir = 1; }
+    const ease = 1 - Math.exp(-dt * 1.5);
+    look.yaw -= look.yaw * ease; look.pitch -= look.pitch * ease; drift.x -= drift.x * ease; drift.y -= drift.y * ease;
+  }
+  scrub.value = s;
+  place();
+  renderer.render(scene, camera);
+});
+
+// screenshot hook for headless renders: window.__shot(s, yaw, pitch, framesToWait)
+window.__shot = async (ss, yaw = 0, pitch = 0, wait = 45) => {
+  setPlaying(false); s = ss; look.yaw = yaw; look.pitch = pitch;
+  await splat.initialized;
+  await new Promise(r => { let n = wait; const t = () => (--n <= 0 ? r() : requestAnimationFrame(t)); t(); });
+};
+if (qp.has('shot')) {
+  document.getElementById('ui').style.display = 'none'; status.style.display = 'none'; poster.style.display = 'none';
+  window.__shot(+qp.get('shot')).then(() => { window.__ready = true; });
+}
+</script>
+</body>
+</html>

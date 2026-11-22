@@ -1,0 +1,49 @@
+---
+// Same view, several versions: tab buttons swap the image in place (all images share one grid cell,
+// so the box never jumps). Used for real footage vs. v1 vs. v2 renders.
+interface Props { items: { label: string; src: string; alt: string; note?: string }[]; caption?: string }
+const { items, caption } = Astro.props;
+---
+
+<figure class="cmp">
+  <div class="cmp-tabs" role="tablist">
+    {items.map((it, i) => (
+      <button type="button" role="tab" aria-selected={i === 0 ? "true" : "false"} data-i={i}>{it.label}</button>
+    ))}
+  </div>
+  <div class="cmp-stage">
+    {items.map((it, i) => (
+      <img src={it.src} alt={it.alt} loading="lazy" decoding="async" class={i === 0 ? "on" : ""} data-i={i} />
+    ))}
+  </div>
+  <div class="cmp-notes">
+    {items.map((it, i) => it.note && <p class={i === 0 ? "on" : ""} data-i={i}>{it.note}</p>)}
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>(".cmp")) {
+    const show = (i: string) => {
+      fig.querySelectorAll<HTMLElement>("[data-i]").forEach((el) => {
+        const on = el.dataset.i === i;
+        if (el.tagName === "BUTTON") el.setAttribute("aria-selected", String(on));
+        else el.classList.toggle("on", on);
+      });
+    };
+    fig.querySelectorAll<HTMLButtonElement>(".cmp-tabs button").forEach((b) => b.addEventListener("click", () => show(b.dataset.i!)));
+  }
+</script>
+
+<style>
+  .cmp { margin: 1.6em 0 2em; }
+  .cmp-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.55rem; }
+  .cmp-tabs button { font-family: var(--font-mono); font-size: 0.78rem; padding: 0.35rem 0.75rem; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 3px; cursor: pointer; }
+  .cmp-tabs button[aria-selected="true"] { color: #07130b; background: var(--accent); border-color: var(--accent); }
+  .cmp-stage { display: grid; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: #000; }
+  .cmp-stage img { grid-area: 1 / 1; width: 100%; height: auto; margin: 0 !important; border-radius: 0 !important; opacity: 0; transition: opacity 0.25s; }
+  .cmp-stage img.on { opacity: 1; }
+  .cmp-notes p { display: none; margin: 0.6rem 0 0; font-size: 0.88rem; color: var(--text); }
+  .cmp-notes p.on { display: block; }
+  .cmp figcaption { margin-top: 0.4rem; font-size: 0.8rem; color: var(--text-muted); }
+</style>

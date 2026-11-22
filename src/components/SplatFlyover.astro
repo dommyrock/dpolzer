@@ -1,0 +1,58 @@
+---
+// The 5-second Gaussian splat clip (public/splat-flyover/) as a wide, interactive embed.
+// The viewer is a self-contained page (three.js + Spark from jsDelivr, 3 MB .spz), so it runs in an
+// iframe that is only created when the box nears the viewport. Until then, and for readers who
+// prefer reduced motion, the box shows the poster / a pre-rendered MP4 of the same path.
+---
+
+<figure class="splat-bleed">
+  <div class="splat-box" data-src="/splat-flyover/?accent=4ade80">
+    <img src="/splat-flyover/poster.jpg" alt="Downtown Vice City rebuilt as a Gaussian splat, seen from the helicopter's path" width="1280" height="720" />
+    <video class="splat-reduced" src="/splat-flyover/clip.mp4" poster="/splat-flyover/poster.jpg" muted loop playsinline controls preload="none" hidden></video>
+  </div>
+  <figcaption>
+    A 3 MB Gaussian splat of 5 seconds of the flight, rendered live in your browser.{" "}
+    <span class="splat-mouse"><b>Drag</b> to look around, <b>click and scroll</b> (or use the slider) to fly back and forth along the real camera path, <b>right-drag</b> to drift sideways.</span>
+    <span class="splat-touch"><b>Swipe sideways</b> to look around, use the <b>slider</b> to fly along the real camera path.</span>{" "}
+    No WebGL? <a href="/splat-flyover/clip.mp4">Watch the 5 s render instead</a>.
+  </figcaption>
+</figure>
+
+<script>
+  for (const box of document.querySelectorAll<HTMLElement>(".splat-box")) {
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const webgl = (() => { try { return !!document.createElement("canvas").getContext("webgl2"); } catch { return false; } })();
+    if (reduce || !webgl) {
+      const v = box.querySelector("video")!;
+      v.hidden = false; box.querySelector("img")!.hidden = true;
+      continue;
+    }
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        const f = document.createElement("iframe");
+        f.src = box.dataset.src!;
+        f.title = "Interactive Gaussian splat of downtown Vice City";
+        f.allow = "fullscreen";
+        f.addEventListener("load", () => setTimeout(() => box.querySelector("img")?.remove(), 1500));
+        box.appendChild(f);
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(box);
+  }
+</script>
+
+<style is:global>
+  html { overflow-x: clip; }
+  .splat-bleed { width: min(1180px, calc(100vw - 16px)); margin: 0.4rem 0 2.4rem calc(50% - min(590px, 50vw - 8px)); }
+  .splat-box { position: relative; aspect-ratio: 16 / 9; max-height: 82vh; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #000; }
+  .splat-box > img, .splat-box > video, .splat-box > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; margin: 0; border-radius: 0; }
+  .splat-box > img { z-index: 1; pointer-events: none; }
+  .splat-bleed figcaption { max-width: 760px; margin: 0.7rem auto 0; padding: 0 1.25rem; font-size: 0.85rem; line-height: 1.55; color: var(--text-muted); }
+  .splat-bleed figcaption b { color: var(--text); font-weight: 600; }
+  .splat-touch { display: none; }
+  @media (hover: none) and (pointer: coarse) { .splat-touch { display: inline; } .splat-mouse { display: none; } }
+  @media (max-width: 640px) { .splat-box { aspect-ratio: 4 / 3; } }
+</style>

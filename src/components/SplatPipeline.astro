@@ -1,0 +1,33 @@
+---
+// The reconstruction pipeline as a numbered strip: what each step does, the tool, and what it cost.
+interface Props { steps: { name: string; tool: string; out: string; time: string }[] }
+const { steps } = Astro.props;
+---
+
+<figure class="sp-pipe" aria-label="Reconstruction pipeline">
+  <ol>
+    {steps.map((s, i) => (
+      <li>
+        <span class="sp-n">{String(i + 1).padStart(2, "0")}</span>
+        <span class="sp-name">{s.name}</span>
+        <span class="sp-tool">{s.tool}</span>
+        <span class="sp-out">{s.out}</span>
+        <span class="sp-time">{s.time}</span>
+      </li>
+    ))}
+  </ol>
+</figure>
+
+<style>
+  .sp-pipe { margin: 1.6em 0 2em; padding: 0.4rem 0; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
+  .sp-pipe ol { list-style: none !important; margin: 0 !important; padding: 0 !important; }
+  .sp-pipe li { position: relative; display: grid; grid-template-columns: 2.2rem 1fr 6.5rem; grid-template-areas: "n name time" "n tool tool" "n out out"; column-gap: 0.6rem; padding: 0.65rem 1rem !important; margin: 0 !important; border-bottom: 1px solid var(--border-soft); font-size: 0.88rem; line-height: 1.45; }
+  .sp-pipe li:last-child { border-bottom: 0; }
+  .sp-pipe li::marker { content: none; }
+  .sp-pipe li:not(:last-child)::after { content: ""; position: absolute; left: 2.05rem; top: 2.1rem; bottom: -0.55rem; width: 1px; background: var(--border); }
+  .sp-n { grid-area: n; font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); padding-top: 0.1rem; }
+  .sp-name { grid-area: name; color: var(--text-strong); font-weight: 600; }
+  .sp-tool { grid-area: tool; font-family: var(--font-mono); font-size: 0.76rem; color: var(--teal); }
+  .sp-out { grid-area: out; color: var(--text-muted); font-size: 0.82rem; }
+  .sp-time { grid-area: time; text-align: right; font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); }
+</style>
